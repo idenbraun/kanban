@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0e1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Канбан</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogItCa0LDQvdCx0LDQvSIsCiAgInNob3J0X25hbWUiOiAi0JrQsNC90LHQsNC9IiwKICAiZGVzY3JpcHRpb24iOiAi0J7RgNCz0LDQvdC40LfQsNGG0LjRjyDQt9Cw0LTQsNGHINC4INC/0YDQvtC10LrRgtC+0LIiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBhMGUxYSIsCiAgInRoZW1lX2NvbG9yIjogIiMwYTBlMWEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDUxMiA1MTInJTNFJTNDcmVjdCB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicgZmlsbD0nJTIzMGExNDJkJyByeD0nNjQnLyUzRSUzQ3RleHQgeD0nMjU2JyB5PSczMjAnIGZvbnQtc2l6ZT0nMjUwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPSclMjNmZmYnIGZvbnQtZmFtaWx5PSdzYW5zLXNlcmlmJyUzRfCfjIAlM0MvdGV4dCUzRSUzQy9zdmclM0UiLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiLAogICAgICAicHVycG9zZSI6ICJhbnkgbWFzayBhbnlsYW5nIgogICAgfQogIF0sCiAgIm9yaWVudGF0aW9uIjogInBvcnRyYWl0IiwKICAicHJlZmVyX3JlbGF0ZWRfYXBwbGljYXRpb25zIjogW10sCiAgInNjb3BlIjogW10KfQ==">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230a142d' rx='64'/%3E%3Ctext x='256' y='320' font-size='250' text-anchor='middle' fill='%23fff' font-family='sans-serif'%3E📋%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230a142d' rx='64'/%3E%3Ctext x='256' y='320' font-size='250' text-anchor='middle' fill='%23fff' font-family='sans-serif'%3E📋%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* ----- все стили без изменений ----- */
+        :root {
+            --bg: #0a0e1a;
+            --bg-gradient: radial-gradient(ellipse at 50% 30%, #141b2d 0%, #0a0e1a 70%);
+            --bg-secondary: rgba(255,255,255,0.04);
+            --bg-card: rgba(255,255,255,0.06);
+            --bg-hover: rgba(255,255,255,0.08);
+            --bg-input: rgba(255,255,255,0.06);
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a0a0;
+            --text-muted: #5a5a5a;
+            --border-color: rgba(255,255,255,0.06);
+            --shadow: 0 4px 24px rgba(0,0,0,0.4);
+            --shadow-hover: 0 6px 32px rgba(0,0,0,0.6);
+            --btn-primary: #4a6cf7;
+            --btn-primary-hover: #6a8cff;
+            --btn-danger: #d32f2f;
+            --btn-danger-hover: #f44336;
+            --tag-bg: rgba(255,255,255,0.08);
+            --tag-text: #ccc;
+            --modal-bg: #141b2d;
+            --overlay: rgba(0,0,0,0.7);
+            --fab-shadow: 0 4px 24px rgba(74,108,247,0.3);
+            --fab-bg: #4a6cf7;
+            --fab-color: #fff;
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+            --col-todo: #f9a825;
+            --col-progress: #4a6cf7;
+            --col-done: #34c759;
+            --col-archive: #6a6a6a;
+            --border-radius: 16px;
+            --transition: 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            min-height: 100vh;
+            min-height: 100dvh;
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            transition: background 0.3s, color 0.3s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(10, 14, 26, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+            min-height: 56px;
+            transition: background 0.3s;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .board-selector {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 8px;
+            transition: background 0.15s;
+            user-select: none;
+        }
+
+        .board-selector:hover {
+            background: var(--bg-hover);
+        }
+
+        .board-selector h1 {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+
+        .board-selector h1 i {
+            color: var(--btn-primary);
+            margin-right: 6px;
+        }
+
+        .board-selector .arrow {
+            font-size: 12px;
+            color: var(--text-muted);
+            transition: transform 0.25s;
+        }
+
+        .board-selector .arrow.open {
+            transform: rotate(180deg);
+        }
+
+        .board-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 220px;
+            background: var(--modal-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-hover);
+            padding: 4px;
+            z-index: 30;
+            display: none;
+            backdrop-filter: blur(12px);
+        }
+
+        .board-dropdown.open {
+            display: block;
+        }
+
+        .board-dropdown .board-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 14px;
+            color: var(--text-secondary);
+            gap: 8px;
+        }
+
+        .board-dropdown .board-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .board-dropdown .board-item.active {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .board-dropdown .board-item .board-name {
+            flex: 1;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+
+        .board-dropdown .board-item .board-name:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .board-dropdown .board-item .board-name.editing {
+            background: var(--bg-input);
+            border: 1px solid var(--btn-primary);
+            outline: none;
+            cursor: text;
+            padding: 2px 6px;
+        }
+
+        .board-dropdown .board-item .delete-board {
+            color: var(--text-muted);
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .board-dropdown .board-item .delete-board:hover {
+            color: var(--btn-danger);
+            background: rgba(211, 47, 47, 0.15);
+        }
+
+        .board-dropdown .divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 0;
+        }
+
+        .board-dropdown .create-board {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 14px;
+            color: var(--btn-primary);
+        }
+
+        .board-dropdown .create-board:hover {
+            background: var(--bg-hover);
+        }
+
+        .save-status {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: default;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .save-status .status-icon {
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+
+        .save-status .status-text {
+            font-size: 11px;
+            letter-spacing: 0.04em;
+        }
+
+        .save-status.saving { color: #ffa726; }
+        .save-status.saved { color: #81c784; }
+
+        .tooltip {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+            z-index: 20;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-bottom-color: rgba(10, 10, 10, 0.95);
+        }
+
+        .save-status:hover .tooltip {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            position: relative;
+            z-index: 5;
+        }
+
+        .header-actions button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 40px;
+            min-width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            position: relative;
+            z-index: 5;
+        }
+
+        .header-actions button:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .header-actions button .label {
+            font-size: 13px;
+            display: none;
+        }
+
+        .header-actions button .badge-archive {
+            background: var(--col-archive);
+            color: #fff;
+            font-size: 10px;
+            border-radius: 20px;
+            padding: 0 8px;
+            min-width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .board-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 16px calc(80px + var(--safe-area-bottom));
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .board {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .column {
+            background: var(--bg-secondary);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            transition: background 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+            border-top: 4px solid var(--col-todo);
+        }
+
+        .column[data-column-id="todo"] { border-top-color: var(--col-todo); }
+        .column[data-column-id="progress"] { border-top-color: var(--col-progress); }
+        .column[data-column-id="done"] { border-top-color: var(--col-done); }
+        .column[data-column-id="archive"] { border-top-color: var(--col-archive); opacity: 0.7; }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .column-header h2 {
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .column-header h2 .col-icon {
+            font-size: 14px;
+        }
+
+        .column-header .badge {
+            background: var(--tag-bg);
+            padding: 1px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: var(--tag-text);
+        }
+
+        .column-header .add-card-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 4px 10px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.15s;
+            font-size: 14px;
+            min-height: 32px;
+            min-width: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .column-header .add-card-btn:active { transform: scale(0.92); }
+
+        .card-list {
+            padding: 8px 12px;
+            min-height: 60px;
+            transition: background 0.15s;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-list.drag-over {
+            background: var(--bg-hover);
+            border-radius: 8px;
+        }
+
+        .card-list .empty-message {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-align: center;
+            padding: 20px 0;
+            letter-spacing: 0.04em;
+        }
+
+        .card-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            cursor: grab;
+        }
+
+        .card-wrapper:active { cursor: grabbing; }
+
+        .card-wrapper.dragging {
+            opacity: 0.3;
+            transform: scale(0.97);
+        }
+
+        .card-inner {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 14px;
+            transition: transform var(--transition);
+            z-index: 2;
+            touch-action: none;
+        }
+
+        .card-inner.swiped { transform: translateX(-140px); }
+
+        .card-title {
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 2px;
+            padding-right: 80px;
+            word-break: break-word;
+            color: var(--text-primary);
+        }
+
+        .card-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 2px 0 6px 0;
+            line-height: 1.4;
+        }
+
+        .card-tag {
+            display: inline-block;
+            padding: 1px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            letter-spacing: 0.03em;
+        }
+
+        .card-tag.red { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+        .card-tag.green { background: rgba(52, 199, 89, 0.2); color: #34c759; }
+        .card-tag.blue { background: rgba(74, 108, 247, 0.2); color: #4a6cf7; }
+        .card-tag.orange { background: rgba(255, 165, 2, 0.2); color: #ffa502; }
+        .card-tag.purple { background: rgba(162, 155, 254, 0.2); color: #a29bfe; }
+
+        .auto-archive-badge {
+            display: inline-block;
+            font-size: 9px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            background: rgba(255, 165, 2, 0.2);
+            color: #ffa502;
+            margin-top: 4px;
+            letter-spacing: 0.04em;
+        }
+
+        .card-actions {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            display: flex;
+            gap: 2px;
+        }
+
+        .card-actions button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 13px;
+            min-height: 32px;
+            min-width: 32px;
+            border-radius: 6px;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-actions button:active { background: var(--bg-hover); }
+        .card-actions .restore-btn:hover { color: var(--col-done); }
+
+        .card-swipe-actions {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 0;
+            transform: translateX(100%);
+            transition: transform var(--transition);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .card-swipe-actions.open { transform: translateX(0); }
+
+        .card-swipe-actions button {
+            height: 100%;
+            padding: 0 16px;
+            border: none;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 64px;
+            font-family: inherit;
+        }
+
+        .card-swipe-actions .swipe-edit { background: var(--btn-primary); }
+        .card-swipe-actions .swipe-delete { background: var(--btn-danger); }
+        .card-swipe-actions .swipe-restore { background: var(--col-done); }
+        .card-swipe-actions .swipe-archive { background: var(--col-archive); }
+
+        .fab {
+            position: fixed;
+            bottom: calc(24px + var(--safe-area-bottom));
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            background: var(--fab-bg);
+            color: var(--fab-color);
+            font-size: 24px;
+            box-shadow: var(--fab-shadow);
+            cursor: pointer;
+            transition: all 0.25s;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .fab:active { transform: scale(0.88); }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--overlay);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 16px;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--modal-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            max-width: 420px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+
+        .modal h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal label {
+            font-weight: 500;
+            font-size: 12px;
+            display: block;
+            margin: 12px 0 4px 0;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .modal input,
+        .modal textarea,
+        .modal select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: border 0.15s;
+            min-height: 44px;
+        }
+
+        .modal input:focus,
+        .modal textarea:focus,
+        .modal select:focus {
+            outline: none;
+            border-color: var(--btn-primary);
+        }
+
+        .modal textarea { resize: vertical; min-height: 80px; }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .modal-actions button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            min-height: 44px;
+        }
+
+        .modal-actions .btn-primary {
+            background: var(--btn-primary);
+            color: #fff;
+        }
+
+        .modal-actions .btn-primary:active { opacity: 0.7; transform: scale(0.97); }
+
+        .modal-actions .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .modal-actions .btn-secondary:active { background: var(--bg-hover); }
+
+        #fileInput { display: none; }
+
+        @media (min-width: 768px) {
+            .board-wrapper {
+                padding: 20px 24px calc(24px + var(--safe-area-bottom));
+            }
+
+            .board {
+                flex-direction: row;
+                gap: 20px;
+                max-width: 1200px;
+                align-items: stretch;
+            }
+
+            .column { flex: 1; min-height: 400px; }
+            .card-list { min-height: 300px; }
+            .fab { display: none; }
+
+            .header-actions button .label {
+                display: inline;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .card-title { font-size: 13px; }
+            .card-desc { font-size: 11px; }
+            .modal { padding: 18px; }
+            .modal input,
+            .modal textarea,
+            .modal select { font-size: 14px; padding: 10px 12px; }
+            .column-header h2 { font-size: 11px; }
+        }
+
+        @media (display-mode: standalone) {
+            body {
+                padding-top: env(safe-area-inset-top);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-left">
+            <div class="board-selector" id="boardSelector">
+                <h1><i class="fas fa-tasks"></i> <span id="boardName">Канбан</span></h1>
+                <span class="arrow" id="boardArrow"><i class="fas fa-chevron-down"></i></span>
+            </div>
+            <div class="board-dropdown" id="boardDropdown">
+                <div id="boardList"></div>
+                <div class="divider"></div>
+                <div class="create-board" id="createBoardBtn">
+                    <i class="fas fa-plus"></i> Создать доску
+                </div>
+            </div>
+            <span class="save-status saved" id="saveStatus">
+                <i class="fas fa-check-circle status-icon"></i>
+                <span class="status-text">Сохранено</span>
+                <span class="tooltip">Данные сохранены локально в браузере</span>
+            </span>
+        </div>
+        <div class="header-actions">
+            <button id="archiveToggleBtn" title="Архив">
+                <i class="fas fa-archive"></i>
+                <span class="label">Архив</span>
+                <span class="badge-archive" id="archiveBadge">0</span>
+            </button>
+            <button id="exportBtn" title="Экспорт">
+                <i class="fas fa-file-export"></i>
+                <span class="label">Экспорт</span>
+            </button>
+            <button id="importBtn" title="Импорт">
+                <i class="fas fa-file-import"></i>
+                <span class="label">Импорт</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="board-wrapper" id="boardWrapper">
+        <div class="board" id="board"></div>
+    </div>
+
+    <button class="fab" id="fabBtn" title="Добавить задачу">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <div class="modal-overlay" id="cardModal">
+        <div class="modal">
+            <h3 id="modalTitle"><i class="fas fa-plus-circle"></i> Новая карточка</h3>
+            <label>Заголовок</label>
+            <input type="text" id="cardTitleInput" placeholder="Название задачи" />
+            <label>Описание</label>
+            <textarea id="cardDescInput" placeholder="Подробности..."></textarea>
+            <label>Тег</label>
+            <select id="cardTagInput">
+                <option value="">Без тега</option>
+                <option value="red">🔴 Важно</option>
+                <option value="green">🟢 Работа</option>
+                <option value="blue">🔵 Личное</option>
+                <option value="orange">🟠 Идея</option>
+                <option value="purple">🟣 Проект</option>
+            </select>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="modalCancelBtn"><i class="fas fa-times"></i> Отмена</button>
+                <button class="btn-primary" id="modalSaveBtn"><i class="fas fa-save"></i> Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка для создания доски -->
+    <div class="modal-overlay" id="boardModal">
+        <div class="modal">
+            <h3><i class="fas fa-plus-circle"></i> Новая доска</h3>
+            <label>Название доски</label>
+            <input type="text" id="boardNameInput" placeholder="Например: Работа, Личное..." />
+            <div class="modal-actions">
+                <button class="btn-secondary" id="boardModalCancelBtn"><i class="fas fa-times"></i> Отмена</button>
+                <button class="btn-primary" id="boardModalSaveBtn"><i class="fas fa-save"></i> Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".json">
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ================================================================
+            // 1. КОНФИГУРАЦИЯ
+            // ================================================================
+            const STORAGE_KEY = 'kanban_data';
+            const SHOW_ARCHIVE_KEY = 'kanban_show_archive';
+            const ARCHIVE_DAYS = 3;
+
+            const COLUMNS = [
+                { id: 'todo', title: 'В очереди', icon: 'fa-clipboard-list', color: 'var(--col-todo)' },
+                { id: 'progress', title: 'В процессе', icon: 'fa-rocket', color: 'var(--col-progress)' },
+                { id: 'done', title: 'Готово', icon: 'fa-check-circle', color: 'var(--col-done)' }
+            ];
+
+            let data = {
+                boards: {},
+                currentBoardId: null
+            };
+
+            let showArchive = false;
+            let editingCardId = null;
+            let targetColumnId = null;
+            let saveTimeout = null;
+            let editingBoardId = null;
+
+            // ================================================================
+            // 2. LOCALSTORAGE
+            // ================================================================
+            function loadFromStorage() {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    try {
+                        const parsed = JSON.parse(raw);
+                        if (parsed.boards && parsed.currentBoardId) {
+                            data = parsed;
+                            if (!data.boards[data.currentBoardId]) {
+                                const boardIds = Object.keys(data.boards);
+                                data.currentBoardId = boardIds.length > 0 ? boardIds[0] : null;
+                            }
+                            return;
+                        }
+                    } catch (_) {}
+                }
+                const boardId = generateId();
+                data = {
+                    boards: {
+                        [boardId]: {
+                            name: 'Моя доска',
+                            cards: getDefaultCards()
+                        }
+                    },
+                    currentBoardId: boardId
+                };
+                saveToStorage();
+            }
+
+            function saveToStorage() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                updateSaveStatus(true);
+                updateArchiveBadge();
+                updateBoardSelector();
+            }
+
+            function saveToStorageDebounced() {
+                if (saveTimeout) clearTimeout(saveTimeout);
+                updateSaveStatus(false);
+                saveTimeout = setTimeout(function() {
+                    saveToStorage();
+                    saveTimeout = null;
+                }, 400);
+            }
+
+            function updateSaveStatus(saved) {
+                const status = document.getElementById('saveStatus');
+                if (saved) {
+                    status.className = 'save-status saved';
+                    status.querySelector('.status-icon').className = 'fas fa-check-circle status-icon';
+                    status.querySelector('.status-text').textContent = 'Сохранено';
+                } else {
+                    status.className = 'save-status saving';
+                    status.querySelector('.status-icon').className = 'fas fa-spinner fa-spin status-icon';
+                    status.querySelector('.status-text').textContent = 'Сохранение...';
+                }
+            }
+
+            // ================================================================
+            // 3. РАБОТА С ДОСКАМИ
+            // ================================================================
+            function getCurrentBoard() {
+                if (!data.currentBoardId || !data.boards[data.currentBoardId]) {
+                    const ids = Object.keys(data.boards);
+                    if (ids.length === 0) {
+                        const id = generateId();
+                        data.boards[id] = { name: 'Моя доска', cards: [] };
+                        data.currentBoardId = id;
+                        saveToStorage();
+                    } else {
+                        data.currentBoardId = ids[0];
+                        saveToStorage();
+                    }
+                }
+                return data.boards[data.currentBoardId];
+            }
+
+            function getCards() {
+                return getCurrentBoard().cards || [];
+            }
+
+            function setCards(newCards) {
+                getCurrentBoard().cards = newCards;
+            }
+
+            function getBoardName() {
+                return getCurrentBoard().name || 'Канбан';
+            }
+
+            function getActiveCards() {
+                return getCards().filter(c => c.column !== 'archive');
+            }
+
+            function getArchivedCards() {
+                return getCards().filter(c => c.column === 'archive');
+            }
+
+            function updateArchiveBadge() {
+                const count = getArchivedCards().length;
+                const badge = document.getElementById('archiveBadge');
+                if (badge) badge.textContent = count;
+            }
+
+            // ================================================================
+            // 4. ВЫПАДАЮЩИЙ СПИСОК ДОСОК
+            // ================================================================
+            function updateBoardSelector() {
+                const nameEl = document.getElementById('boardName');
+                nameEl.textContent = getBoardName();
+
+                const list = document.getElementById('boardList');
+                list.innerHTML = '';
+
+                Object.keys(data.boards).forEach(id => {
+                    const board = data.boards[id];
+                    const item = document.createElement('div');
+                    item.className = 'board-item' + (id === data.currentBoardId ? ' active' : '');
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'board-name';
+                    nameSpan.textContent = board.name;
+                    nameSpan.dataset.boardId = id;
+
+                    nameSpan.addEventListener('dblclick', function(e) {
+                        e.stopPropagation();
+                        startRenameBoard(id, this);
+                    });
+
+                    const deleteBtn = document.createElement('span');
+                    deleteBtn.className = 'delete-board';
+                    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    deleteBtn.title = 'Удалить доску';
+                    if (Object.keys(data.boards).length <= 1) {
+                        deleteBtn.style.opacity = '0.3';
+                        deleteBtn.style.cursor = 'default';
+                    } else {
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            deleteBoard(id);
+                        });
+                    }
+
+                    item.appendChild(nameSpan);
+                    item.appendChild(deleteBtn);
+
+                    item.addEventListener('click', function(e) {
+                        if (e.target.closest('.delete-board') || e.target.closest('.board-name.editing')) return;
+                        switchBoard(id);
+                    });
+
+                    list.appendChild(item);
+                });
+            }
+
+            // ================================================================
+            // 5. ПЕРЕИМЕНОВАНИЕ ДОСКИ
+            // ================================================================
+            function startRenameBoard(boardId, element) {
+                if (editingBoardId) return;
+                editingBoardId = boardId;
+
+                const currentName = data.boards[boardId].name;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'board-name editing';
+                input.value = currentName;
+                input.dataset.boardId = boardId;
+
+                element.replaceWith(input);
+                input.focus();
+                input.select();
+
+                function finishRename() {
+                    const newName = input.value.trim() || 'Доска';
+                    data.boards[boardId].name = newName;
+                    editingBoardId = null;
+                    saveToStorage();
+                    updateBoardSelector();
+                    const nameEl = document.getElementById('boardName');
+                    nameEl.textContent = newName;
+                }
+
+                input.addEventListener('blur', finishRename);
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        input.blur();
+                    }
+                    if (e.key === 'Escape') {
+                        input.value = currentName;
+                        input.blur();
+                    }
+                });
+            }
+
+            // ================================================================
+            // 6. ПЕРЕКЛЮЧЕНИЕ / УДАЛЕНИЕ ДОСОК
+            // ================================================================
+            function switchBoard(boardId) {
+                if (boardId === data.currentBoardId) return;
+                if (!data.boards[boardId]) return;
+                data.currentBoardId = boardId;
+                showArchive = false;
+                localStorage.setItem(SHOW_ARCHIVE_KEY, 'false');
+                document.getElementById('archiveToggleBtn').style.color = '';
+                saveToStorage();
+                closeBoardDropdown();
+                render();
+            }
+
+            function deleteBoard(boardId) {
+                if (Object.keys(data.boards).length <= 1) {
+                    alert('Нельзя удалить единственную доску.');
+                    return;
+                }
+                if (!confirm('Удалить доску "' + data.boards[boardId].name + '" со всеми карточками?')) return;
+
+                delete data.boards[boardId];
+                if (data.currentBoardId === boardId) {
+                    const ids = Object.keys(data.boards);
+                    data.currentBoardId = ids[0];
+                }
+                saveToStorage();
+                closeBoardDropdown();
+                render();
+            }
+
+            function createNewBoard(name) {
+                const id = generateId();
+                data.boards[id] = {
+                    name: name || 'Новая доска',
+                    cards: []
+                };
+                data.currentBoardId = id;
+                saveToStorage();
+                closeBoardDropdown();
+                render();
+            }
+
+            function openBoardModal() {
+                const modal = document.getElementById('boardModal');
+                modal.classList.add('active');
+                document.getElementById('boardNameInput').value = '';
+                setTimeout(() => document.getElementById('boardNameInput').focus(), 300);
+            }
+
+            function closeBoardModal() {
+                document.getElementById('boardModal').classList.remove('active');
+            }
+
+            function saveBoardFromModal() {
+                const name = document.getElementById('boardNameInput').value.trim() || 'Новая доска';
+                createNewBoard(name);
+                closeBoardModal();
+            }
+
+            // ================================================================
+            // 7. ВЫПАДАЮЩИЙ СПИСОК (открытие/закрытие)
+            // ================================================================
+            let isBoardDropdownOpen = false;
+
+            function toggleBoardDropdown() {
+                if (editingBoardId) return;
+                isBoardDropdownOpen = !isBoardDropdownOpen;
+                document.getElementById('boardDropdown').classList.toggle('open', isBoardDropdownOpen);
+                document.getElementById('boardArrow').classList.toggle('open', isBoardDropdownOpen);
+            }
+
+            function closeBoardDropdown() {
+                isBoardDropdownOpen = false;
+                document.getElementById('boardDropdown').classList.remove('open');
+                document.getElementById('boardArrow').classList.remove('open');
+            }
+
+            // ================================================================
+            // 8. ДАННЫЕ (дефолтные карточки)
+            // ================================================================
+            function getDefaultCards() {
+                return [
+                    { id: generateId(), title: 'Сделать дизайн', desc: 'Фигма, 10 экранов', tag: 'blue',
+                        column: 'todo' },
+                    { id: generateId(), title: 'Написать код', desc: 'React + Node.js', tag: 'orange',
+                        column: 'progress' },
+                    { id: generateId(), title: 'Задеплоить', desc: 'На VPS с nginx', tag: 'green', column: 'done',
+                        completedAt: Date.now() }
+                ];
+            }
+
+            function generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+            }
+
+            // ================================================================
+            // 9. АВТОАРХИВ
+            // ================================================================
+            function checkArchive() {
+                const now = Date.now();
+                const threshold = ARCHIVE_DAYS * 24 * 60 * 60 * 1000;
+                let changed = false;
+                const cards = getCards();
+
+                cards.forEach(card => {
+                    if (card.column === 'done' && card.completedAt) {
+                        if (!card.manuallyArchived && (now - card.completedAt > threshold)) {
+                            card.column = 'archive';
+                            card.archivedAt = now;
+                            card.autoArchived = true;
+                            changed = true;
+                        }
+                    }
+                });
+
+                if (changed) {
+                    setCards(cards);
+                    saveToStorage();
+                    render();
+                }
+            }
+
+            setInterval(checkArchive, 10000);
+
+            // ================================================================
+            // 10. РЕНДЕРИНГ
+            // ================================================================
+            function render() {
+                const board = document.getElementById('board');
+                board.innerHTML = '';
+                const cards = getCards();
+
+                const columnsToRender = [...COLUMNS];
+                if (showArchive) {
+                    columnsToRender.push({ id: 'archive', title: 'Архив', icon: 'fa-archive',
+                    color: 'var(--col-archive)' });
+                }
+
+                columnsToRender.forEach(col => {
+                    const colCards = cards.filter(c => c.column === col.id);
+                    const colDiv = document.createElement('div');
+                    colDiv.className = 'column';
+                    colDiv.dataset.columnId = col.id;
+
+                    const header = document.createElement('div');
+                    header.className = 'column-header';
+                    header.innerHTML = `
+                        <h2>
+                            <i class="fas ${col.icon} col-icon" style="color:${col.color};"></i>
+                            ${col.title}
+                            <span class="badge">${colCards.length}</span>
+                        </h2>
+                        ${col.id !== 'archive' ? `<button class="add-card-btn" data-column="${col.id}"><i class="fas fa-plus"></i></button>` : ''}
+                    `;
+                    colDiv.appendChild(header);
+
+                    const list = document.createElement('div');
+                    list.className = 'card-list';
+                    list.dataset.columnId = col.id;
+
+                    if (colCards.length === 0) {
+                        const empty = document.createElement('div');
+                        empty.className = 'empty-message';
+                        empty.innerHTML = col.id === 'archive' ?
+                            '<i class="fas fa-inbox"></i> Архив пуст' :
+                            '<i class="fas fa-inbox"></i> Нет карточек';
+                        list.appendChild(empty);
+                    } else {
+                        colCards.forEach(card => {
+                            list.appendChild(createCardWrapper(card));
+                        });
+                    }
+
+                    colDiv.appendChild(list);
+                    board.appendChild(colDiv);
+                });
+
+                document.querySelectorAll('.add-card-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const columnId = this.dataset.column;
+                        openModal(null, columnId);
+                    });
+                });
+
+                setupDragAndDrop();
+                updateArchiveBadge();
+                updateBoardSelector();
+
+                const btn = document.getElementById('archiveToggleBtn');
+                btn.style.color = showArchive ? 'var(--btn-primary)' : '';
+            }
+
+            // ================================================================
+            // 11. КАРТОЧКА
+            // ================================================================
+            function createCardWrapper(card) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'card-wrapper';
+                wrapper.draggable = true;
+                wrapper.dataset.cardId = card.id;
+
+                const inner = document.createElement('div');
+                inner.className = 'card-inner';
+
+                const title = document.createElement('div');
+                title.className = 'card-title';
+                title.textContent = card.title || 'Без названия';
+                inner.appendChild(title);
+
+                if (card.desc) {
+                    const desc = document.createElement('div');
+                    desc.className = 'card-desc';
+                    desc.textContent = card.desc;
+                    inner.appendChild(desc);
+                }
+
+                if (card.tag) {
+                    const tag = document.createElement('span');
+                    tag.className = 'card-tag ' + card.tag;
+                    const labels = { red: 'Важно', green: 'Работа', blue: 'Личное', orange: 'Идея', purple: 'Проект' };
+                    tag.textContent = labels[card.tag] || card.tag;
+                    inner.appendChild(tag);
+                }
+
+                if (card.column === 'archive' && card.autoArchived) {
+                    const badge = document.createElement('div');
+                    badge.className = 'auto-archive-badge';
+                    badge.innerHTML = '<i class="fas fa-clock"></i> Автоархив';
+                    inner.appendChild(badge);
+                }
+
+                const actions = document.createElement('div');
+                actions.className = 'card-actions';
+
+                const editBtn = document.createElement('button');
+                editBtn.innerHTML = '<i class="fas fa-pen"></i>';
+                editBtn.title = 'Редактировать';
+                editBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openModal(card.id);
+                });
+                actions.appendChild(editBtn);
+
+                if (card.column === 'archive') {
+                    const restoreBtn = document.createElement('button');
+                    restoreBtn.className = 'restore-btn';
+                    restoreBtn.innerHTML = '<i class="fas fa-undo"></i>';
+                    restoreBtn.title = 'Восстановить';
+                    restoreBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (confirm('Восстановить "' + card.title + '" в "Готово"?')) {
+                            restoreFromArchive(card.id);
+                        }
+                    });
+                    actions.appendChild(restoreBtn);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    deleteBtn.title = 'Удалить навсегда';
+                    deleteBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (confirm('Навсегда удалить "' + card.title + '"?')) {
+                            deleteCard(card.id);
+                        }
+                    });
+                    actions.appendChild(deleteBtn);
+                } else {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    deleteBtn.title = 'Удалить';
+                    deleteBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (confirm('Удалить "' + card.title + '"?')) {
+                            deleteCard(card.id);
+                        }
+                    });
+                    actions.appendChild(deleteBtn);
+                }
+
+                inner.appendChild(actions);
+
+                const swipeActions = document.createElement('div');
+                swipeActions.className = 'card-swipe-actions';
+                swipeActions.dataset.cardId = card.id;
+
+                if (card.column === 'archive') {
+                    const restoreSwipe = document.createElement('button');
+                    restoreSwipe.className = 'swipe-restore';
+                    restoreSwipe.innerHTML = '<i class="fas fa-undo"></i>';
+                    restoreSwipe.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        closeAllSwipes();
+                        if (confirm('Восстановить "' + card.title + '"?')) {
+                            restoreFromArchive(card.id);
+                        }
+                    });
+                    swipeActions.appendChild(restoreSwipe);
+
+                    const deleteSwipe = document.createElement('button');
+                    deleteSwipe.className = 'swipe-delete';
+                    deleteSwipe.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteSwipe.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        closeAllSwipes();
+                        if (confirm('Навсегда удалить "' + card.title + '"?')) {
+                            deleteCard(card.id);
+                        }
+                    });
+                    swipeActions.appendChild(deleteSwipe);
+                } else {
+                    const archiveSwipe = document.createElement('button');
+                    archiveSwipe.className = 'swipe-archive';
+                    archiveSwipe.innerHTML = '<i class="fas fa-archive"></i>';
+                    archiveSwipe.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        closeAllSwipes();
+                        manuallyArchive(card.id);
+                    });
+                    swipeActions.appendChild(archiveSwipe);
+
+                    const editSwipe = document.createElement('button');
+                    editSwipe.className = 'swipe-edit';
+                    editSwipe.innerHTML = '<i class="fas fa-pen"></i>';
+                    editSwipe.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        closeAllSwipes();
+                        openModal(card.id);
+                    });
+                    swipeActions.appendChild(editSwipe);
+
+                    const deleteSwipe = document.createElement('button');
+                    deleteSwipe.className = 'swipe-delete';
+                    deleteSwipe.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteSwipe.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        closeAllSwipes();
+                        if (confirm('Удалить "' + card.title + '"?')) {
+                            deleteCard(card.id);
+                        }
+                    });
+                    swipeActions.appendChild(deleteSwipe);
+                }
+
+                wrapper.appendChild(inner);
+                wrapper.appendChild(swipeActions);
+
+                let startX = 0,
+                    currentX = 0,
+                    isSwiping = false;
+
+                inner.addEventListener('touchstart', function(e) {
+                    const touch = e.touches[0];
+                    startX = touch.clientX;
+                    currentX = startX;
+                    isSwiping = true;
+                    closeAllSwipes();
+                }, { passive: true });
+
+                inner.addEventListener('touchmove', function(e) {
+                    if (!isSwiping) return;
+                    const touch = e.touches[0];
+                    currentX = touch.clientX;
+                    const diff = startX - currentX;
+
+                    if (diff > 10) {
+                        e.preventDefault();
+                        const progress = Math.min(diff / 140, 1);
+                        inner.style.transform = 'translateX(-' + (progress * 140) + 'px)';
+                        swipeActions.style.transform = 'translateX(' + ((1 - progress) * 100) + '%)';
+                    }
+                }, { passive: false });
+
+                inner.addEventListener('touchend', function() {
+                    if (!isSwiping) return;
+                    isSwiping = false;
+                    const diff = startX - currentX;
+
+                    if (diff > 60) {
+                        inner.style.transform = 'translateX(-140px)';
+                        swipeActions.style.transform = 'translateX(0)';
+                        swipeActions.classList.add('open');
+                    } else {
+                        inner.style.transform = 'translateX(0)';
+                        swipeActions.style.transform = 'translateX(100%)';
+                        swipeActions.classList.remove('open');
+                    }
+                }, { passive: true });
+
+                wrapper.addEventListener('dragstart', function(e) {
+                    if (card.column === 'archive') {
+                        e.preventDefault();
+                        return;
+                    }
+                    closeAllSwipes();
+                    this.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', card.id);
+                });
+
+                wrapper.addEventListener('dragend', function(e) {
+                    this.classList.remove('dragging');
+                    document.querySelectorAll('.card-list').forEach(el => el.classList.remove('drag-over'));
+                });
+
+                wrapper.addEventListener('dblclick', function() {
+                    if (card.column !== 'archive') openModal(card.id);
+                });
+
+                return wrapper;
+            }
+
+            function closeAllSwipes() {
+                document.querySelectorAll('.card-wrapper').forEach(w => {
+                    const inner = w.querySelector('.card-inner');
+                    const actions = w.querySelector('.card-swipe-actions');
+                    if (inner) inner.style.transform = 'translateX(0)';
+                    if (actions) {
+                        actions.style.transform = 'translateX(100%)';
+                        actions.classList.remove('open');
+                    }
+                });
+            }
+
+            // ================================================================
+            // 12. DRAG & DROP
+            // ================================================================
+            function setupDragAndDrop() {
+                document.querySelectorAll('.card-list').forEach(list => {
+                    list.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        document.querySelectorAll('.card-list').forEach(el => el.classList.remove('drag-over'));
+                        this.classList.add('drag-over');
+
+                        const afterElement = getDragAfterElement(this, e.clientY);
+                        const draggable = document.querySelector('.card-wrapper.dragging');
+                        if (draggable) {
+                            if (afterElement) {
+                                this.insertBefore(draggable, afterElement);
+                            } else {
+                                this.appendChild(draggable);
+                            }
+                        }
+                    });
+
+                    list.addEventListener('drop', function(e) {
+                        e.preventDefault();
+                        this.classList.remove('drag-over');
+
+                        const cardId = e.dataTransfer.getData('text/plain');
+                        if (!cardId) return;
+
+                        const newColumnId = this.dataset.columnId;
+                        const cards = getCards();
+                        const card = cards.find(c => c.id === cardId);
+                        if (!card) return;
+
+                        if (card.column === newColumnId) return;
+
+                        if (newColumnId === 'archive') {
+                            card.column = 'archive';
+                            card.archivedAt = Date.now();
+                            card.manuallyArchived = true;
+                            delete card.autoArchived;
+                            setCards(cards);
+                            saveToStorageDebounced();
+                            render();
+                            return;
+                        }
+
+                        if (newColumnId === 'done' && card.column !== 'done') {
+                            card.completedAt = Date.now();
+                            delete card.manuallyArchived;
+                            delete card.autoArchived;
+                        }
+
+                        card.column = newColumnId;
+
+                        const newOrder = [];
+                        this.querySelectorAll('.card-wrapper').forEach(w => {
+                            const id = w.dataset.cardId;
+                            if (id) newOrder.push(id);
+                        });
+
+                        const newCards = [];
+                        const cardMap = {};
+                        cards.forEach(c => cardMap[c.id] = c);
+
+                        newOrder.forEach(id => {
+                            if (cardMap[id]) {
+                                newCards.push(cardMap[id]);
+                                delete cardMap[id];
+                            }
+                        });
+
+                        Object.values(cardMap).forEach(c => newCards.push(c));
+
+                        setCards(newCards);
+                        saveToStorageDebounced();
+                        render();
+                    });
+                });
+            }
+
+            function getDragAfterElement(container, y) {
+                const elements = [...container.querySelectorAll('.card-wrapper:not(.dragging)')];
+                return elements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    }
+                    return closest;
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            // ================================================================
+            // 13. ДЕЙСТВИЯ
+            // ================================================================
+            function deleteCard(cardId) {
+                let cards = getCards();
+                cards = cards.filter(c => c.id !== cardId);
+                setCards(cards);
+                closeAllSwipes();
+                saveToStorageDebounced();
+                render();
+            }
+
+            function manuallyArchive(cardId) {
+                const cards = getCards();
+                const card = cards.find(c => c.id === cardId);
+                if (!card) return;
+                card.column = 'archive';
+                card.archivedAt = Date.now();
+                card.manuallyArchived = true;
+                delete card.autoArchived;
+                setCards(cards);
+                closeAllSwipes();
+                saveToStorageDebounced();
+                render();
+            }
+
+            function restoreFromArchive(cardId) {
+                const cards = getCards();
+                const card = cards.find(c => c.id === cardId);
+                if (!card) return;
+                card.column = 'done';
+                card.completedAt = Date.now();
+                delete card.manuallyArchived;
+                delete card.autoArchived;
+                setCards(cards);
+                closeAllSwipes();
+                saveToStorageDebounced();
+                render();
+            }
+
+            // ================================================================
+            // 14. МОДАЛКА КАРТОЧКИ
+            // ================================================================
+            function openModal(cardId, columnId) {
+                const overlay = document.getElementById('cardModal');
+                const titleInput = document.getElementById('cardTitleInput');
+                const descInput = document.getElementById('cardDescInput');
+                const tagInput = document.getElementById('cardTagInput');
+                const modalTitle = document.getElementById('modalTitle');
+                const cards = getCards();
+
+                if (cardId) {
+                    const card = cards.find(c => c.id === cardId);
+                    if (!card) return;
+                    editingCardId = cardId;
+                    targetColumnId = null;
+                    modalTitle.innerHTML = '<i class="fas fa-edit"></i> Редактировать';
+                    titleInput.value = card.title || '';
+                    descInput.value = card.desc || '';
+                    tagInput.value = card.tag || '';
+                } else {
+                    editingCardId = null;
+                    targetColumnId = columnId || 'todo';
+                    modalTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Новая карточка';
+                    titleInput.value = '';
+                    descInput.value = '';
+                    tagInput.value = '';
+                }
+
+                overlay.classList.add('active');
+                setTimeout(() => titleInput.focus(), 300);
+            }
+
+            function closeModal() {
+                document.getElementById('cardModal').classList.remove('active');
+                editingCardId = null;
+                targetColumnId = null;
+            }
+
+            function saveCardFromModal() {
+                const title = document.getElementById('cardTitleInput').value.trim() || 'Без названия';
+                const desc = document.getElementById('cardDescInput').value.trim();
+                const tag = document.getElementById('cardTagInput').value || '';
+                let cards = getCards();
+
+                if (editingCardId) {
+                    const card = cards.find(c => c.id === editingCardId);
+                    if (card) {
+                        card.title = title;
+                        card.desc = desc;
+                        card.tag = tag;
+                    }
+                } else {
+                    const newCard = {
+                        id: generateId(),
+                        title: title,
+                        desc: desc,
+                        tag: tag,
+                        column: targetColumnId || 'todo',
+                        completedAt: targetColumnId === 'done' ? Date.now() : null
+                    };
+                    cards.push(newCard);
+                }
+
+                setCards(cards);
+                closeModal();
+                closeAllSwipes();
+                saveToStorageDebounced();
+                render();
+            }
+
+            // ================================================================
+            // 15. АРХИВ (переключение видимости)
+            // ================================================================
+            function toggleArchive() {
+                showArchive = !showArchive;
+                localStorage.setItem(SHOW_ARCHIVE_KEY, String(showArchive));
+                render();
+            }
+
+            // ================================================================
+            // 16. ЭКСПОРТ / ИМПОРТ
+            // ================================================================
+            function exportData() {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'kanban_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            function importData(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const parsed = JSON.parse(e.target.result);
+                        if (parsed.boards && parsed.currentBoardId) {
+                            if (confirm('Импорт заменит все текущие доски. Продолжить?')) {
+                                data = parsed;
+                                saveToStorage();
+                                render();
+                                alert('Импорт выполнен!');
+                            }
+                        } else {
+                            alert('Невалидный файл.');
+                        }
+                    } catch (_) {
+                        alert('Ошибка чтения файла.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            // ================================================================
+            // 17. ИНИЦИАЛИЗАЦИЯ
+            // ================================================================
+            function init() {
+                // Принудительно закрываем архив при старте
+                showArchive = false;
+                localStorage.setItem(SHOW_ARCHIVE_KEY, 'false');
+
+                loadFromStorage();
+                render();
+                checkArchive();
+
+                // Выпадающий список досок
+                document.getElementById('boardSelector').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleBoardDropdown();
+                });
+
+                document.addEventListener('click', function(e) {
+                    const dropdown = document.getElementById('boardDropdown');
+                    const selector = document.getElementById('boardSelector');
+                    if (!dropdown.contains(e.target) && !selector.contains(e.target)) {
+                        closeBoardDropdown();
+                    }
+                });
+
+                document.getElementById('boardDropdown').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+
+                document.getElementById('createBoardBtn').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeBoardDropdown();
+                    openBoardModal();
+                });
+
+                // Модалка доски
+                document.getElementById('boardModalCancelBtn').addEventListener('click', closeBoardModal);
+                document.getElementById('boardModalSaveBtn').addEventListener('click', saveBoardFromModal);
+                document.getElementById('boardModal').addEventListener('click', function(e) {
+                    if (e.target === this) closeBoardModal();
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        closeBoardModal();
+                        closeModal();
+                        if (editingBoardId) {
+                            editingBoardId = null;
+                            updateBoardSelector();
+                        }
+                    }
+                    if (e.key === 'Enter') {
+                        if (document.getElementById('boardModal').classList.contains('active')) {
+                            saveBoardFromModal();
+                        }
+                        if (document.getElementById('cardModal').classList.contains('active')) {
+                            saveCardFromModal();
+                        }
+                    }
+                });
+
+                // Архив
+                document.getElementById('archiveToggleBtn').addEventListener('click', toggleArchive);
+
+                // Модалка карточки
+                document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+                document.getElementById('modalSaveBtn').addEventListener('click', saveCardFromModal);
+                document.getElementById('cardModal').addEventListener('click', function(e) {
+                    if (e.target === this) closeModal();
+                });
+
+                // FAB
+                document.getElementById('fabBtn').addEventListener('click', function() {
+                    openModal(null, 'todo');
+                });
+
+                // Экспорт / Импорт
+                document.getElementById('exportBtn').addEventListener('click', exportData);
+                document.getElementById('importBtn').addEventListener('click', function() {
+                    document.getElementById('fileInput').click();
+                });
+
+                document.getElementById('fileInput').addEventListener('change', function(e) {
+                    if (this.files && this.files[0]) {
+                        importData(this.files[0]);
+                    }
+                    this.value = '';
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+</html>
