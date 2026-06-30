@@ -498,6 +498,8 @@
             border-radius: 10px;
             cursor: grab;
             touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .card-wrapper:active { cursor: grabbing; }
@@ -528,8 +530,6 @@
             z-index: 2;
             touch-action: none;
         }
-
-        .card-inner.swiped { transform: translateX(-140px); }
 
         .card-title {
             font-weight: 500;
@@ -601,41 +601,6 @@
 
         .card-actions button:active { background: var(--bg-hover); }
         .card-actions .restore-btn:hover { color: var(--col-done); }
-
-        .card-swipe-actions {
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
-            gap: 0;
-            transform: translateX(100%);
-            transition: transform var(--transition);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .card-swipe-actions.open { transform: translateX(0); }
-
-        .card-swipe-actions button {
-            height: 100%;
-            padding: 0 16px;
-            border: none;
-            color: #fff;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            min-width: 64px;
-            font-family: inherit;
-        }
-
-        .card-swipe-actions .swipe-edit { background: var(--btn-primary); }
-        .card-swipe-actions .swipe-delete { background: var(--btn-danger); }
-        .card-swipe-actions .swipe-restore { background: var(--col-done); }
 
         .fab {
             position: fixed;
@@ -1508,7 +1473,7 @@
             }
 
             // ================================================================
-            // 11. КАРТОЧКА
+            // 11. КАРТОЧКА — БЕЗ СВАЙПА
             // ================================================================
             function createCardWrapper(card) {
                 const wrapper = document.createElement('div');
@@ -1595,107 +1560,9 @@
                 }
 
                 inner.appendChild(actions);
-
-                const swipeActions = document.createElement('div');
-                swipeActions.className = 'card-swipe-actions';
-                swipeActions.dataset.cardId = card.id;
-
-                if (card.column === 'archive') {
-                    const restoreSwipe = document.createElement('button');
-                    restoreSwipe.className = 'swipe-restore';
-                    restoreSwipe.innerHTML = '<i class="fas fa-undo"></i>';
-                    restoreSwipe.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        closeAllSwipes();
-                        if (confirm('Восстановить "' + card.title + '"?')) {
-                            restoreFromArchive(card.id);
-                        }
-                    });
-                    swipeActions.appendChild(restoreSwipe);
-
-                    const deleteSwipe = document.createElement('button');
-                    deleteSwipe.className = 'swipe-delete';
-                    deleteSwipe.innerHTML = '<i class="fas fa-trash"></i>';
-                    deleteSwipe.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        closeAllSwipes();
-                        if (confirm('Навсегда удалить "' + card.title + '"?')) {
-                            deleteCard(card.id);
-                        }
-                    });
-                    swipeActions.appendChild(deleteSwipe);
-                } else {
-                    // Только edit и delete, без archive
-                    const editSwipe = document.createElement('button');
-                    editSwipe.className = 'swipe-edit';
-                    editSwipe.innerHTML = '<i class="fas fa-pen"></i>';
-                    editSwipe.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        closeAllSwipes();
-                        openModal(card.id);
-                    });
-                    swipeActions.appendChild(editSwipe);
-
-                    const deleteSwipe = document.createElement('button');
-                    deleteSwipe.className = 'swipe-delete';
-                    deleteSwipe.innerHTML = '<i class="fas fa-trash"></i>';
-                    deleteSwipe.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        closeAllSwipes();
-                        if (confirm('Удалить "' + card.title + '"?')) {
-                            deleteCard(card.id);
-                        }
-                    });
-                    swipeActions.appendChild(deleteSwipe);
-                }
-
                 wrapper.appendChild(inner);
-                wrapper.appendChild(swipeActions);
 
-                // ----- SWIPE (touch) -----
-                let startX = 0;
-                let currentX = 0;
-                let isSwiping = false;
-
-                inner.addEventListener('touchstart', function(e) {
-                    const touch = e.touches[0];
-                    startX = touch.clientX;
-                    currentX = startX;
-                    isSwiping = true;
-                    closeAllSwipes();
-                }, { passive: true });
-
-                inner.addEventListener('touchmove', function(e) {
-                    if (!isSwiping) return;
-                    const touch = e.touches[0];
-                    currentX = touch.clientX;
-                    const diff = startX - currentX;
-
-                    if (diff > 10) {
-                        e.preventDefault();
-                        const progress = Math.min(diff / 140, 1);
-                        inner.style.transform = 'translateX(-' + (progress * 140) + 'px)';
-                        swipeActions.style.transform = 'translateX(' + ((1 - progress) * 100) + '%)';
-                    }
-                }, { passive: false });
-
-                inner.addEventListener('touchend', function() {
-                    if (!isSwiping) return;
-                    isSwiping = false;
-                    const diff = startX - currentX;
-
-                    if (diff > 60) {
-                        inner.style.transform = 'translateX(-140px)';
-                        swipeActions.style.transform = 'translateX(0)';
-                        swipeActions.classList.add('open');
-                    } else {
-                        inner.style.transform = 'translateX(0)';
-                        swipeActions.style.transform = 'translateX(100%)';
-                        swipeActions.classList.remove('open');
-                    }
-                }, { passive: true });
-
-                // ----- TOUCH DRAG -----
+                // ----- TOUCH DRAG (перетаскивание) -----
                 let dragData = null;
 
                 wrapper.addEventListener('touchstart', function(e) {
@@ -1708,7 +1575,8 @@
                         startX: touch.clientX,
                         startY: touch.clientY,
                         moved: false,
-                        startTime: Date.now()
+                        targetColumnId: null,
+                        targetList: null
                     };
                 }, { passive: true });
 
@@ -1720,7 +1588,6 @@
                     const dx = touch.clientX - dragData.startX;
                     const dy = touch.clientY - dragData.startY;
 
-                    // Увеличен порог до 15px, движение больше по горизонтали
                     if (Math.abs(dx) > 15 && Math.abs(dx) > Math.abs(dy) * 0.7) {
                         dragData.moved = true;
                         e.preventDefault();
@@ -1734,7 +1601,6 @@
                             clone.dataset.cardId = card.id;
                             document.body.appendChild(clone);
 
-                            // Подсвечиваем все колонки, включая архив
                             document.querySelectorAll('.card-list').forEach(el => {
                                 el.classList.add('drag-over');
                             });
@@ -1745,12 +1611,15 @@
                             overlay.style.left = (touch.clientX - 140) + 'px';
                             overlay.style.top = (touch.clientY - 40) + 'px';
 
+                            // Находим элемент под пальцем
                             const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                            document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
+
                             if (el) {
                                 const list = el.closest('.card-list');
-                                document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
                                 if (list) {
                                     list.classList.add('drag-over');
+                                    dragData.targetList = list;
                                 }
                             }
                         }
@@ -1771,19 +1640,17 @@
                         const overlay = document.querySelector('.card-wrapper.drag-overlay');
                         if (overlay) overlay.remove();
 
-                        const el = document.elementFromPoint(touch.clientX, touch.clientY);
-                        let targetList = null;
-                        if (el) {
-                            targetList = el.closest('.card-list');
-                        }
-
                         document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
+
+                        const targetList = dragData.targetList;
 
                         if (targetList) {
                             const newColumnId = targetList.dataset.columnId;
                             const cards = getCards();
                             const cardObj = cards.find(c => c.id === card.id);
+
                             if (cardObj && cardObj.column !== newColumnId) {
+                                // Перемещение между колонками
                                 if (newColumnId === 'archive') {
                                     cardObj.column = 'archive';
                                     cardObj.archivedAt = Date.now();
@@ -1797,7 +1664,74 @@
                                     }
                                     cardObj.column = newColumnId;
                                 }
-                                setCards(cards);
+
+                                // Обновляем порядок карточек в целевой колонке
+                                const cardIds = [];
+                                targetList.querySelectorAll('.card-wrapper').forEach(w => {
+                                    const id = w.dataset.cardId;
+                                    if (id && id !== card.id) {
+                                        cardIds.push(id);
+                                    }
+                                });
+
+                                // Вставляем карточку на позицию, где она визуально находится
+                                const cardWrappers = targetList.querySelectorAll('.card-wrapper');
+                                let insertIndex = cardWrappers.length;
+                                for (let i = 0; i < cardWrappers.length; i++) {
+                                    if (cardWrappers[i].dataset.cardId === card.id) {
+                                        insertIndex = i;
+                                        break;
+                                    }
+                                }
+
+                                cardIds.splice(insertIndex, 0, card.id);
+
+                                // Сортируем все карточки по новому порядку
+                                const cardMap = {};
+                                cards.forEach(c => cardMap[c.id] = c);
+
+                                const newCards = [];
+                                cardIds.forEach(id => {
+                                    if (cardMap[id]) {
+                                        newCards.push(cardMap[id]);
+                                        delete cardMap[id];
+                                    }
+                                });
+
+                                // Добавляем карточки, которые не попали в порядок (если есть)
+                                Object.values(cardMap).forEach(c => newCards.push(c));
+
+                                // Фильтруем карточки, чтобы оставить только те, что в этой колонке
+                                const filteredCards = newCards.filter(c => c.column === newColumnId);
+                                const otherCards = cards.filter(c => c.column !== newColumnId);
+
+                                setCards([...otherCards, ...filteredCards]);
+                                saveToStorageDebounced();
+                                render();
+                            } else if (cardObj && cardObj.column === newColumnId) {
+                                // Перемещение внутри одной колонки (смена порядка)
+                                const cardIds = [];
+                                targetList.querySelectorAll('.card-wrapper').forEach(w => {
+                                    const id = w.dataset.cardId;
+                                    if (id) {
+                                        cardIds.push(id);
+                                    }
+                                });
+
+                                const cardMap = {};
+                                cards.forEach(c => cardMap[c.id] = c);
+
+                                const newCards = [];
+                                cardIds.forEach(id => {
+                                    if (cardMap[id]) {
+                                        newCards.push(cardMap[id]);
+                                        delete cardMap[id];
+                                    }
+                                });
+
+                                Object.values(cardMap).forEach(c => newCards.push(c));
+
+                                setCards(newCards);
                                 saveToStorageDebounced();
                                 render();
                             }
@@ -1813,7 +1747,6 @@
                         e.preventDefault();
                         return;
                     }
-                    closeAllSwipes();
                     this.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', card.id);
@@ -1829,18 +1762,6 @@
                 });
 
                 return wrapper;
-            }
-
-            function closeAllSwipes() {
-                document.querySelectorAll('.card-wrapper').forEach(w => {
-                    const inner = w.querySelector('.card-inner');
-                    const actions = w.querySelector('.card-swipe-actions');
-                    if (inner) inner.style.transform = 'translateX(0)';
-                    if (actions) {
-                        actions.style.transform = 'translateX(100%)';
-                        actions.classList.remove('open');
-                    }
-                });
             }
 
             // ================================================================
@@ -1879,7 +1800,32 @@
                         const card = cards.find(c => c.id === cardId);
                         if (!card) return;
 
-                        if (card.column === newColumnId) return;
+                        if (card.column === newColumnId) {
+                            // Перемещение внутри одной колонки
+                            const newOrder = [];
+                            this.querySelectorAll('.card-wrapper').forEach(w => {
+                                const id = w.dataset.cardId;
+                                if (id) newOrder.push(id);
+                            });
+
+                            const newCards = [];
+                            const cardMap = {};
+                            cards.forEach(c => cardMap[c.id] = c);
+
+                            newOrder.forEach(id => {
+                                if (cardMap[id]) {
+                                    newCards.push(cardMap[id]);
+                                    delete cardMap[id];
+                                }
+                            });
+
+                            Object.values(cardMap).forEach(c => newCards.push(c));
+
+                            setCards(newCards);
+                            saveToStorageDebounced();
+                            render();
+                            return;
+                        }
 
                         if (newColumnId === 'archive') {
                             card.column = 'archive';
@@ -1945,7 +1891,6 @@
                 let cards = getCards();
                 cards = cards.filter(c => c.id !== cardId);
                 setCards(cards);
-                closeAllSwipes();
                 saveToStorageDebounced();
                 render();
             }
@@ -1959,7 +1904,6 @@
                 card.manuallyArchived = true;
                 delete card.autoArchived;
                 setCards(cards);
-                closeAllSwipes();
                 saveToStorageDebounced();
                 render();
             }
@@ -1973,7 +1917,6 @@
                 delete card.manuallyArchived;
                 delete card.autoArchived;
                 setCards(cards);
-                closeAllSwipes();
                 saveToStorageDebounced();
                 render();
             }
@@ -2044,7 +1987,6 @@
 
                 setCards(cards);
                 closeModal();
-                closeAllSwipes();
                 saveToStorageDebounced();
                 render();
             }
