@@ -67,7 +67,6 @@
             color: var(--text-primary);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             transition: background 0.3s, color 0.3s;
-            touch-action: none;
             -webkit-tap-highlight-color: transparent;
             overflow: hidden;
         }
@@ -390,7 +389,10 @@
             overflow-x: hidden;
             padding: 16px 16px calc(80px + var(--safe-area-bottom));
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-y;
+        }
+
+        .board-wrapper.dragging-active {
+            overflow: hidden !important;
         }
 
         .board {
@@ -496,31 +498,32 @@
 
         .card-wrapper {
             position: relative;
-            overflow: hidden;
             border-radius: 10px;
             cursor: grab;
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
-            touch-action: none;
+            touch-action: pan-y;
         }
 
         .card-wrapper:active { cursor: grabbing; }
 
         .card-wrapper.dragging {
-            opacity: 0.3;
-            transform: scale(0.97);
+            opacity: 0.4;
+            transform: scale(0.95);
+            transition: opacity 0.2s, transform 0.2s;
         }
 
         .card-wrapper.drag-overlay {
             position: fixed;
             pointer-events: none;
             z-index: 999;
-            opacity: 0.9;
-            transform: scale(1.05) rotate(2deg);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            opacity: 0.95;
+            transform: scale(1.05) rotate(1deg);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
             border-radius: 10px;
             width: 280px;
+            transition: none;
         }
 
         .card-inner {
@@ -531,6 +534,8 @@
             padding: 12px 14px;
             transition: transform var(--transition);
             z-index: 2;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
 
         .card-title {
@@ -946,6 +951,16 @@
             body {
                 padding-top: env(safe-area-inset-top);
             }
+        }
+
+        /* Drag ghost hide */
+        .card-wrapper.dragging .card-inner {
+            opacity: 0.3;
+            transform: scale(0.95);
+        }
+
+        .drag-ghost {
+            display: none !important;
         }
     </style>
 </head>
@@ -1581,23 +1596,34 @@
 
                     longPressTimer = setTimeout(function() {
                         isDragging = true;
-                        document.body.style.overflow = 'hidden';
-                        document.body.style.touchAction = 'none';
-
-                        // Блокируем скролл родителя
+                        
+                        // Блокируем скролл
                         const wrapperEl = document.getElementById('boardWrapper');
-                        if (wrapperEl) wrapperEl.style.overflow = 'hidden';
+                        if (wrapperEl) wrapperEl.classList.add('dragging-active');
+                        document.body.style.overflow = 'hidden';
 
                         wrapper.classList.add('dragging');
 
-                        // Создаем оверлей
-                        const clone = wrapper.cloneNode(true);
+                        // Создаем оверлей — клонируем только внутренность
+                        const cloneInner = inner.cloneNode(true);
+                        const clone = document.createElement('div');
                         clone.className = 'card-wrapper drag-overlay';
+                        clone.appendChild(cloneInner);
+                        
                         const rect = wrapper.getBoundingClientRect();
-                        clone.style.left = (touch.clientX - 140) + 'px';
-                        clone.style.top = (touch.clientY - 40) + 'px';
-                        clone.dataset.cardId = card.id;
+                        const offsetX = touch.clientX - rect.left;
+                        const offsetY = touch.clientY - rect.top;
+                        
+                        clone.style.left = (touch.clientX - offsetX) + 'px';
+                        clone.style.top = (touch.clientY - offsetY) + 'px';
                         clone.style.width = rect.width + 'px';
+                        clone.dataset.cardId = card.id;
+                        clone.style.pointerEvents = 'none';
+                        
+                        // Сохраняем смещение для плавного движения
+                        clone.dataset.offsetX = offsetX;
+                        clone.dataset.offsetY = offsetY;
+                        
                         document.body.appendChild(clone);
 
                         // Подсвечиваем все списки
@@ -1611,10 +1637,11 @@
 
                         dragData = {
                             cardId: card.id,
-                            startX: touch.clientX,
-                            startY: touch.clientY,
                             targetList: null,
-                            moved: false
+                            moved: false,
+                            clone: clone,
+                            offsetX: offsetX,
+                            offsetY: offsetY
                         };
                     }, 350);
                 }, { passive: true });
@@ -1638,26 +1665,33 @@
                     }
 
                     // Если не начали перетаскивание - игнорируем
-                    if (!isDragging || !dragData) return;
+                    if (!isDragging || !dragData) {
+                        // Разрешаем скролл
+                        return;
+                    }
 
                     e.preventDefault();
 
                     dragData.moved = true;
 
                     // Обновляем позицию оверлея
-                    const overlay = document.querySelector('.card-wrapper.drag-overlay');
-                    if (overlay) {
-                        overlay.style.left = (touch.clientX - 140) + 'px';
-                        overlay.style.top = (touch.clientY - 40) + 'px';
+                    const clone = dragData.clone;
+                    if (clone) {
+                        const offsetX = parseFloat(clone.dataset.offsetX) || 0;
+                        const offsetY = parseFloat(clone.dataset.offsetY) || 0;
+                        clone.style.left = (touch.clientX - offsetX) + 'px';
+                        clone.style.top = (touch.clientY - offsetY) + 'px';
 
                         // Ищем колонку под пальцем
                         document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
                         const el = document.elementFromPoint(touch.clientX, touch.clientY);
                         if (el) {
                             const list = el.closest('.card-list');
-                            if (list) {
+                            if (list && list.dataset.columnId !== 'archive') {
                                 list.classList.add('drag-over');
                                 dragData.targetList = list;
+                            } else {
+                                dragData.targetList = null;
                             }
                         }
                     }
@@ -1673,24 +1707,23 @@
                     // Если не было перетаскивания - просто клик
                     if (!isDragging || !dragData) {
                         document.body.style.overflow = '';
-                        document.body.style.touchAction = '';
                         const wrapperEl = document.getElementById('boardWrapper');
-                        if (wrapperEl) wrapperEl.style.overflow = '';
+                        if (wrapperEl) wrapperEl.classList.remove('dragging-active');
                         return;
                     }
 
                     const touch = e.changedTouches[0];
 
                     // Удаляем оверлей
-                    const overlay = document.querySelector('.card-wrapper.drag-overlay');
-                    if (overlay) overlay.remove();
+                    if (dragData.clone && dragData.clone.parentNode) {
+                        dragData.clone.parentNode.removeChild(dragData.clone);
+                    }
 
                     wrapper.classList.remove('dragging');
                     document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
                     document.body.style.overflow = '';
-                    document.body.style.touchAction = '';
                     const wrapperEl = document.getElementById('boardWrapper');
-                    if (wrapperEl) wrapperEl.style.overflow = '';
+                    if (wrapperEl) wrapperEl.classList.remove('dragging-active');
 
                     // Если переместили
                     if (dragData.moved && dragData.targetList) {
@@ -1699,7 +1732,7 @@
                         const cards = getCards();
                         const cardObj = cards.find(c => c.id === card.id);
 
-                        if (cardObj) {
+                        if (cardObj && newColumnId) {
                             if (cardObj.column !== newColumnId) {
                                 // Перемещение между колонками
                                 if (newColumnId === 'archive') {
@@ -1720,7 +1753,7 @@
                                 saveToStorageDebounced();
                                 render();
                             } else {
-                                // Перемещение внутри одной колонки
+                                // Перемещение внутри одной колонки — пересортировка
                                 const cardIds = [];
                                 targetList.querySelectorAll('.card-wrapper').forEach(w => {
                                     const id = w.dataset.cardId;
@@ -1754,15 +1787,15 @@
                         clearTimeout(longPressTimer);
                         longPressTimer = null;
                     }
-                    if (isDragging) {
-                        const overlay = document.querySelector('.card-wrapper.drag-overlay');
-                        if (overlay) overlay.remove();
+                    if (isDragging && dragData) {
+                        if (dragData.clone && dragData.clone.parentNode) {
+                            dragData.clone.parentNode.removeChild(dragData.clone);
+                        }
                         wrapper.classList.remove('dragging');
                         document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
                         document.body.style.overflow = '';
-                        document.body.style.touchAction = '';
                         const wrapperEl = document.getElementById('boardWrapper');
-                        if (wrapperEl) wrapperEl.style.overflow = '';
+                        if (wrapperEl) wrapperEl.classList.remove('dragging-active');
                         isDragging = false;
                         dragData = null;
                     }
@@ -1779,6 +1812,15 @@
                     this.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', card.id);
+                    
+                    // Скрываем стандартный гост
+                    const ghost = document.createElement('div');
+                    ghost.className = 'drag-ghost';
+                    document.body.appendChild(ghost);
+                    e.dataTransfer.setDragImage(ghost, 0, 0);
+                    setTimeout(() => {
+                        if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
+                    }, 0);
                 });
 
                 wrapper.addEventListener('dragend', function(e) {
