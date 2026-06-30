@@ -12,7 +12,6 @@
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230a142d' rx='64'/%3E%3Ctext x='256' y='320' font-size='250' text-anchor='middle' fill='%23fff' font-family='sans-serif'%3E📋%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* ----- CSS-переменные ----- */
         :root {
             --bg: #0a0e1a;
             --bg-gradient: radial-gradient(ellipse at 50% 30%, #141b2d 0%, #0a0e1a 70%);
@@ -44,19 +43,14 @@
             --col-archive: #6a6a6a;
             --border-radius: 16px;
             --transition: 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-
-            /* Футер */
             --footer-text: #3a3a3a;
             --footer-link: #6a6a6a;
             --footer-link-hover: #c0c0c0;
             --footer-border: #181818;
-
-            /* Шапка и сайдбар по умолчанию (синий) */
             --header-bg: rgba(10, 14, 26, 0.6);
             --sidebar-bg: #0a0e1a;
         }
 
-        /* Черный фон */
         html[data-bg="dark"] {
             --header-bg: rgba(10, 10, 10, 0.6);
             --sidebar-bg: #0a0a0a;
@@ -68,6 +62,8 @@
             height: 100%;
             min-height: 100vh;
             min-height: 100dvh;
+            margin: 0;
+            padding: 0;
             color: var(--text-primary);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             transition: background 0.3s, color 0.3s;
@@ -82,7 +78,6 @@
             background-attachment: fixed;
         }
 
-        /* Фон на html задается через JS */
         html {
             background: #0a0e1a;
             background-attachment: fixed;
@@ -91,9 +86,17 @@
             background-position: center center;
         }
 
-        /* ================================================================
-           ШАПКА
-           ================================================================ */
+        .app-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1 0 auto;
+            width: 100%;
+            max-width: 100%;
+            min-height: 100vh;
+            min-height: 100dvh;
+            background: transparent;
+        }
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -119,7 +122,6 @@
             flex: 1 1 auto;
         }
 
-        /* На мобилках статус под названием */
         @media (max-width: 767px) {
             .header-left {
                 flex-direction: column;
@@ -634,7 +636,6 @@
         .card-swipe-actions .swipe-edit { background: var(--btn-primary); }
         .card-swipe-actions .swipe-delete { background: var(--btn-danger); }
         .card-swipe-actions .swipe-restore { background: var(--col-done); }
-        .card-swipe-actions .swipe-archive { background: var(--col-archive); }
 
         .fab {
             position: fixed;
@@ -764,9 +765,6 @@
 
         #fileInput { display: none; }
 
-        /* ================================================================
-           САЙДБАР
-           ================================================================ */
         .sidebar-toggle {
             position: fixed;
             left: 0;
@@ -850,7 +848,6 @@
             background: var(--text-muted);
         }
 
-        /* Цвета фона — только 2 варианта */
         .bg-colors {
             display: flex;
             gap: 10px;
@@ -885,9 +882,6 @@
             background: #0a0a0a;
         }
 
-        /* ================================================================
-           ФУТЕР — как в Breath
-           ================================================================ */
         .footer {
             flex-shrink: 0;
             width: 100%;
@@ -929,9 +923,6 @@
             text-decoration-color: currentColor;
         }
 
-        /* ================================================================
-           АДАПТИВ
-           ================================================================ */
         @media (min-width: 768px) {
             .board-wrapper {
                 padding: 20px 24px calc(24px + var(--safe-area-bottom));
@@ -992,113 +983,110 @@
     </style>
 </head>
 <body>
-
-    <header class="header">
-        <div class="header-left">
-            <div class="board-selector" id="boardSelector">
-                <h1><i class="fas fa-tasks"></i> <span id="boardName">Канбан</span></h1>
-                <span class="arrow" id="boardArrow"><i class="fas fa-chevron-down"></i></span>
+    <div class="app-wrapper">
+        <header class="header">
+            <div class="header-left">
+                <div class="board-selector" id="boardSelector">
+                    <h1><i class="fas fa-tasks"></i> <span id="boardName">Канбан</span></h1>
+                    <span class="arrow" id="boardArrow"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <span class="save-status saved" id="saveStatus">
+                    <i class="fas fa-check-circle status-icon"></i>
+                    <span class="status-text">Сохранено</span>
+                    <span class="tooltip">Данные сохранены локально в браузере</span>
+                </span>
+                <div class="board-dropdown" id="boardDropdown">
+                    <div id="boardList"></div>
+                    <div class="divider"></div>
+                    <div class="create-board" id="createBoardBtn">
+                        <i class="fas fa-plus"></i> Создать доску
+                    </div>
+                </div>
             </div>
-            <span class="save-status saved" id="saveStatus">
-                <i class="fas fa-check-circle status-icon"></i>
-                <span class="status-text">Сохранено</span>
-                <span class="tooltip">Данные сохранены локально в браузере</span>
-            </span>
-            <div class="board-dropdown" id="boardDropdown">
-                <div id="boardList"></div>
-                <div class="divider"></div>
-                <div class="create-board" id="createBoardBtn">
-                    <i class="fas fa-plus"></i> Создать доску
+            <div class="header-actions">
+                <button id="archiveToggleBtn" title="Архив">
+                    <i class="fas fa-archive"></i>
+                    <span class="label">Архив</span>
+                    <span class="badge-archive" id="archiveBadge">0</span>
+                </button>
+                <button id="exportBtn" title="Экспорт">
+                    <i class="fas fa-file-export"></i>
+                    <span class="label">Экспорт</span>
+                </button>
+                <button id="importBtn" title="Импорт">
+                    <i class="fas fa-file-import"></i>
+                    <span class="label">Импорт</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="board-wrapper" id="boardWrapper">
+            <div class="board" id="board"></div>
+        </div>
+
+        <button class="fab" id="fabBtn" title="Добавить задачу">
+            <i class="fas fa-plus"></i>
+        </button>
+
+        <button class="sidebar-toggle" id="sidebarToggle" title="Меню"></button>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-label">Фон</div>
+            <div class="sidebar-row">
+                <div class="bg-colors" id="bgColors">
+                    <div class="color-option active" data-bg="blue" title="Синий"></div>
+                    <div class="color-option" data-bg="dark" title="Черный"></div>
+                </div>
+            </div>
+            <div class="sidebar-dots">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="links">
+                <a href="https://github.com/idenbraun" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://t.me/idendie" target="_blank" rel="noopener">t.me/idendie</a>
+                <a href="mailto:idenbraun@yandex.ru">idenbraun@yandex.ru</a>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="cardModal">
+            <div class="modal">
+                <h3 id="modalTitle"><i class="fas fa-plus-circle"></i> Новая карточка</h3>
+                <label>Заголовок</label>
+                <input type="text" id="cardTitleInput" placeholder="Название задачи" />
+                <label>Описание</label>
+                <textarea id="cardDescInput" placeholder="Подробности..."></textarea>
+                <label>Тег</label>
+                <select id="cardTagInput">
+                    <option value="">Без тега</option>
+                    <option value="red">🔴 Важно</option>
+                    <option value="green">🟢 Работа</option>
+                    <option value="blue">🔵 Личное</option>
+                    <option value="orange">🟠 Идея</option>
+                    <option value="purple">🟣 Проект</option>
+                </select>
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="modalCancelBtn"><i class="fas fa-times"></i> Отмена</button>
+                    <button class="btn-primary" id="modalSaveBtn"><i class="fas fa-save"></i> Сохранить</button>
                 </div>
             </div>
         </div>
-        <div class="header-actions">
-            <button id="archiveToggleBtn" title="Архив">
-                <i class="fas fa-archive"></i>
-                <span class="label">Архив</span>
-                <span class="badge-archive" id="archiveBadge">0</span>
-            </button>
-            <button id="exportBtn" title="Экспорт">
-                <i class="fas fa-file-export"></i>
-                <span class="label">Экспорт</span>
-            </button>
-            <button id="importBtn" title="Импорт">
-                <i class="fas fa-file-import"></i>
-                <span class="label">Импорт</span>
-            </button>
-        </div>
-    </header>
 
-    <div class="board-wrapper" id="boardWrapper">
-        <div class="board" id="board"></div>
-    </div>
-
-    <button class="fab" id="fabBtn" title="Добавить задачу">
-        <i class="fas fa-plus"></i>
-    </button>
-
-    <!-- Сайдбар -->
-    <button class="sidebar-toggle" id="sidebarToggle" title="Меню"></button>
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-label">Фон</div>
-        <div class="sidebar-row">
-            <div class="bg-colors" id="bgColors">
-                <div class="color-option active" data-bg="blue" title="Синий"></div>
-                <div class="color-option" data-bg="dark" title="Черный"></div>
+        <div class="modal-overlay" id="boardModal">
+            <div class="modal">
+                <h3><i class="fas fa-plus-circle"></i> Новая доска</h3>
+                <label>Название доски</label>
+                <input type="text" id="boardNameInput" placeholder="Например: Работа, Личное..." />
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="boardModalCancelBtn"><i class="fas fa-times"></i> Отмена</button>
+                    <button class="btn-primary" id="boardModalSaveBtn"><i class="fas fa-save"></i> Создать</button>
+                </div>
             </div>
         </div>
 
-        <div class="sidebar-dots">
-            <span></span><span></span><span></span>
-        </div>
+        <input type="file" id="fileInput" accept=".json">
     </div>
-
-    <!-- Футер -->
-    <div class="footer">
-        <div class="links">
-            <a href="https://github.com/idenbraun" target="_blank" rel="noopener">GitHub</a>
-            <a href="https://t.me/idendie" target="_blank" rel="noopener">t.me/idendie</a>
-            <a href="mailto:idenbraun@yandex.ru">idenbraun@yandex.ru</a>
-        </div>
-    </div>
-
-    <!-- Модалки -->
-    <div class="modal-overlay" id="cardModal">
-        <div class="modal">
-            <h3 id="modalTitle"><i class="fas fa-plus-circle"></i> Новая карточка</h3>
-            <label>Заголовок</label>
-            <input type="text" id="cardTitleInput" placeholder="Название задачи" />
-            <label>Описание</label>
-            <textarea id="cardDescInput" placeholder="Подробности..."></textarea>
-            <label>Тег</label>
-            <select id="cardTagInput">
-                <option value="">Без тега</option>
-                <option value="red">🔴 Важно</option>
-                <option value="green">🟢 Работа</option>
-                <option value="blue">🔵 Личное</option>
-                <option value="orange">🟠 Идея</option>
-                <option value="purple">🟣 Проект</option>
-            </select>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="modalCancelBtn"><i class="fas fa-times"></i> Отмена</button>
-                <button class="btn-primary" id="modalSaveBtn"><i class="fas fa-save"></i> Сохранить</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="boardModal">
-        <div class="modal">
-            <h3><i class="fas fa-plus-circle"></i> Новая доска</h3>
-            <label>Название доски</label>
-            <input type="text" id="boardNameInput" placeholder="Например: Работа, Личное..." />
-            <div class="modal-actions">
-                <button class="btn-secondary" id="boardModalCancelBtn"><i class="fas fa-times"></i> Отмена</button>
-                <button class="btn-primary" id="boardModalSaveBtn"><i class="fas fa-save"></i> Создать</button>
-            </div>
-        </div>
-    </div>
-
-    <input type="file" id="fileInput" accept=".json">
 
     <script>
         (function() {
@@ -1637,16 +1625,7 @@
                     });
                     swipeActions.appendChild(deleteSwipe);
                 } else {
-                    const archiveSwipe = document.createElement('button');
-                    archiveSwipe.className = 'swipe-archive';
-                    archiveSwipe.innerHTML = '<i class="fas fa-archive"></i>';
-                    archiveSwipe.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        closeAllSwipes();
-                        manuallyArchive(card.id);
-                    });
-                    swipeActions.appendChild(archiveSwipe);
-
+                    // Только edit и delete, без archive
                     const editSwipe = document.createElement('button');
                     editSwipe.className = 'swipe-edit';
                     editSwipe.innerHTML = '<i class="fas fa-pen"></i>';
@@ -1674,9 +1653,9 @@
                 wrapper.appendChild(swipeActions);
 
                 // ----- SWIPE (touch) -----
-                let startX = 0,
-                    currentX = 0,
-                    isSwiping = false;
+                let startX = 0;
+                let currentX = 0;
+                let isSwiping = false;
 
                 inner.addEventListener('touchstart', function(e) {
                     const touch = e.touches[0];
@@ -1741,7 +1720,8 @@
                     const dx = touch.clientX - dragData.startX;
                     const dy = touch.clientY - dragData.startY;
 
-                    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                    // Увеличен порог до 15px, движение больше по горизонтали
+                    if (Math.abs(dx) > 15 && Math.abs(dx) > Math.abs(dy) * 0.7) {
                         dragData.moved = true;
                         e.preventDefault();
 
@@ -1754,10 +1734,9 @@
                             clone.dataset.cardId = card.id;
                             document.body.appendChild(clone);
 
+                            // Подсвечиваем все колонки, включая архив
                             document.querySelectorAll('.card-list').forEach(el => {
-                                if (el.dataset.columnId !== 'archive') {
-                                    el.classList.add('drag-over');
-                                }
+                                el.classList.add('drag-over');
                             });
                         }
 
@@ -1770,7 +1749,7 @@
                             if (el) {
                                 const list = el.closest('.card-list');
                                 document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
-                                if (list && list.dataset.columnId !== 'archive') {
+                                if (list) {
                                     list.classList.add('drag-over');
                                 }
                             }
@@ -1800,17 +1779,24 @@
 
                         document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
 
-                        if (targetList && targetList.dataset.columnId !== 'archive') {
+                        if (targetList) {
                             const newColumnId = targetList.dataset.columnId;
                             const cards = getCards();
                             const cardObj = cards.find(c => c.id === card.id);
                             if (cardObj && cardObj.column !== newColumnId) {
-                                if (newColumnId === 'done' && cardObj.column !== 'done') {
-                                    cardObj.completedAt = Date.now();
-                                    delete cardObj.manuallyArchived;
+                                if (newColumnId === 'archive') {
+                                    cardObj.column = 'archive';
+                                    cardObj.archivedAt = Date.now();
+                                    cardObj.manuallyArchived = true;
                                     delete cardObj.autoArchived;
+                                } else {
+                                    if (newColumnId === 'done' && cardObj.column !== 'done') {
+                                        cardObj.completedAt = Date.now();
+                                        delete cardObj.manuallyArchived;
+                                        delete cardObj.autoArchived;
+                                    }
+                                    cardObj.column = newColumnId;
                                 }
-                                cardObj.column = newColumnId;
                                 setCards(cards);
                                 saveToStorageDebounced();
                                 render();
@@ -2136,7 +2122,8 @@
             function applyBgColor(colorKey) {
                 const gradient = bgColors[colorKey];
                 if (gradient) {
-                    document.documentElement.style.cssText = 'background: ' + gradient + ' !important; background-attachment: fixed !important; background-size: 100% 100% !important; background-repeat: no-repeat !important; background-position: center center !important;';
+                    document.documentElement.style.cssText = 'background: ' + gradient +
+                        ' !important; background-attachment: fixed !important; background-size: 100% 100% !important; background-repeat: no-repeat !important; background-position: center center !important;';
                     document.documentElement.setAttribute('data-bg', colorKey);
                     localStorage.setItem('kanban-bg', colorKey);
 
