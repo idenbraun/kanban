@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0a0e1a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Канбан</title>
+    <title>Канбан с календарем</title>
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogItCa0LDQvdCx0LDQvSIsCiAgInNob3J0X25hbWUiOiAi0JrQsNC90LHQsNC9IiwKICAiZGVzY3JpcHRpb24iOiAi0J7RgNCz0LDQvdC40LfQsNGG0LjRjyDQt9Cw0LTQsNGHINC4INC/0YDQvtC10LrRgtC+0LIiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBhMGUxYSIsCiAgInRoZW1lX2NvbG9yIjogIiMwYTBlMWEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDUxMiA1MTInJTNFJTNDcmVjdCB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicgZmlsbD0nJTIzMGExNDJkJyByeD0nNjQnLyUzRSUzQ3RleHQgeD0nMjU2JyB5PSczMjAnIGZvbnQtc2l6ZT0nMjUwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPSclMjNmZmYnIGZvbnQtZmFtaWx5PSdzYW5zLXNlcmlmJyUzRfCfjIAlM0MvdGV4dCUzRSUzQy9zdmclM0UiLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiLAogICAgICAicHVycG9zZSI6ICJhbnkgbWFzayBhbnlsYW5nIgogICAgfQogIF0sCiAgIm9yaWVudGF0aW9uIjogInBvcnRyYWl0IiwKICAicHJlZmVyX3JlbGF0ZWRfYXBwbGljYXRpb25zIjogW10sCiAgInNjb3BlIjogW10KfQ==">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230a142d' rx='64'/%3E%3Ctext x='256' y='320' font-size='250' text-anchor='middle' fill='%23fff' font-family='sans-serif'%3E📋%3C/text%3E%3C/svg%3E" type="image/svg+xml">
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230a142d' rx='64'/%3E%3Ctext x='256' y='320' font-size='250' text-anchor='middle' fill='%23fff' font-family='sans-serif'%3E📋%3C/text%3E%3C/svg%3E">
@@ -51,6 +51,18 @@
             --sidebar-bg: #0a0e1a;
             --select-option-bg: #141b2d;
             --select-option-hover: rgba(255,255,255,0.08);
+            --deadline-urgent: #ff4444;
+            --deadline-today: #ffa502;
+            --deadline-future: #4a6cf7;
+            --calendar-bg: rgba(255,255,255,0.03);
+            --calendar-hover: rgba(255,255,255,0.06);
+            --calendar-selected: rgba(74,108,247,0.3);
+            --calendar-weekend: rgba(255,255,255,0.02);
+            --notification-bg: rgba(10, 14, 26, 0.95);
+            --notification-success: #34c759;
+            --notification-warning: #ffa502;
+            --notification-danger: #ff4444;
+            --notification-info: #4a6cf7;
         }
 
         html[data-bg="dark"] {
@@ -74,6 +86,11 @@
             --footer-border: #111;
             --select-option-bg: #1a1a1a;
             --select-option-hover: rgba(255,255,255,0.05);
+            --calendar-bg: rgba(255,255,255,0.02);
+            --calendar-hover: rgba(255,255,255,0.04);
+            --calendar-selected: rgba(74,108,247,0.2);
+            --calendar-weekend: rgba(255,255,255,0.01);
+            --notification-bg: rgba(10, 10, 10, 0.95);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -115,6 +132,113 @@
             background: transparent;
         }
 
+        /* ========== УВЕДОМЛЕНИЯ ========== */
+        .notification-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        .notification {
+            background: var(--notification-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 18px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: all;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notification::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+
+        .notification.success::before { background: var(--notification-success); }
+        .notification.warning::before { background: var(--notification-warning); }
+        .notification.danger::before { background: var(--notification-danger); }
+        .notification.info::before { background: var(--notification-info); }
+
+        .notification:hover {
+            transform: translateX(-4px);
+        }
+
+        .notification.hiding {
+            animation: slideOut 0.3s ease forwards;
+        }
+
+        .notification-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .notification-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(120%) scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(120%) scale(0.9);
+                opacity: 0;
+            }
+        }
+
+        /* ========== ХЕДЕР ========== */
         .header {
             display: flex;
             justify-content: space-between;
@@ -261,6 +385,7 @@
             position: relative;
             z-index: 5;
             flex-shrink: 0;
+            flex-wrap: wrap;
         }
 
         .header-actions button {
@@ -305,6 +430,50 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .header-actions .export-dropdown {
+            position: relative;
+        }
+
+        .header-actions .export-dropdown .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            background: var(--modal-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 4px;
+            min-width: 160px;
+            display: none;
+            z-index: 30;
+            backdrop-filter: blur(12px);
+        }
+
+        .header-actions .export-dropdown .dropdown-menu.open {
+            display: block;
+        }
+
+        .header-actions .export-dropdown .dropdown-menu button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 6px;
+            transition: background 0.15s;
+            min-height: 36px;
+            justify-content: flex-start;
+        }
+
+        .header-actions .export-dropdown .dropdown-menu button:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
         }
 
         .board-dropdown {
@@ -526,12 +695,15 @@
             -webkit-user-select: none;
             -webkit-touch-callout: none;
             touch-action: pan-y;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                        opacity 0.3s ease,
+                        box-shadow 0.3s ease;
         }
 
         .card-wrapper:active { cursor: grabbing; }
 
         .card-wrapper.dragging {
-            opacity: 0.4;
+            opacity: 0.5;
             transform: scale(0.95);
             transition: opacity 0.2s, transform 0.2s;
         }
@@ -548,16 +720,47 @@
             transition: none;
         }
 
+        .card-wrapper.swipe-left {
+            animation: swipeLeft 0.3s ease forwards;
+        }
+
+        .card-wrapper.swipe-right {
+            animation: swipeRight 0.3s ease forwards;
+        }
+
+        @keyframes swipeLeft {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(-120%); opacity: 0; }
+        }
+
+        @keyframes swipeRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(120%); opacity: 0; }
+        }
+
+        .card-wrapper.card-enter {
+            animation: cardEnter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes cardEnter {
+            from { transform: scale(0.8) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
         .card-inner {
             position: relative;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 10px;
             padding: 12px 14px;
-            transition: transform var(--transition);
+            transition: transform var(--transition), background 0.3s;
             z-index: 2;
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
+        }
+
+        .card-inner:hover {
+            background: var(--bg-hover);
         }
 
         .card-title {
@@ -592,6 +795,44 @@
         .card-tag.blue { background: rgba(74, 108, 247, 0.2); color: #4a6cf7; }
         .card-tag.orange { background: rgba(255, 165, 2, 0.2); color: #ffa502; }
         .card-tag.purple { background: rgba(162, 155, 254, 0.2); color: #a29bfe; }
+
+        .card-deadline {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 4px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-secondary);
+        }
+
+        .card-deadline.urgent {
+            background: rgba(255, 68, 68, 0.2);
+            color: var(--deadline-urgent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .card-deadline.today {
+            background: rgba(255, 165, 2, 0.2);
+            color: var(--deadline-today);
+        }
+
+        .card-deadline.future {
+            background: rgba(74, 108, 247, 0.2);
+            color: var(--deadline-future);
+        }
+
+        .card-deadline.done {
+            background: rgba(52, 199, 89, 0.2);
+            color: var(--col-done);
+        }
 
         .auto-archive-badge {
             display: inline-block;
@@ -718,7 +959,6 @@
             appearance: none;
         }
 
-        /* Стили для выпадающего списка select */
         .modal select option {
             background: var(--select-option-bg);
             color: var(--text-primary);
@@ -739,7 +979,6 @@
             border-color: var(--btn-primary);
         }
 
-        /* Для Firefox */
         .modal select:-moz-focusring {
             color: var(--text-primary);
             background: var(--bg-input);
@@ -905,6 +1144,215 @@
             background: #0a0a0a;
         }
 
+        /* ========== КАЛЕНДАРЬ ========== */
+        .calendar-btn {
+            position: relative;
+        }
+
+        .calendar-btn .badge-calendar {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--deadline-today);
+            color: #fff;
+            font-size: 9px;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .calendar-modal {
+            max-width: 500px;
+            max-height: 85vh;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .calendar-header h3 {
+            margin: 0;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .calendar-nav button {
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 14px;
+        }
+
+        .calendar-nav button:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 16px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 8px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: var(--calendar-bg);
+            position: relative;
+            min-height: 40px;
+        }
+
+        .calendar-day:hover {
+            background: var(--calendar-hover);
+        }
+
+        .calendar-day.today {
+            background: var(--calendar-selected);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .calendar-day.selected {
+            background: var(--btn-primary);
+            color: #fff;
+        }
+
+        .calendar-day.weekend {
+            background: var(--calendar-weekend);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+
+        .calendar-day.has-deadline::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--deadline-today);
+        }
+
+        .calendar-day.has-deadline.urgent::after {
+            background: var(--deadline-urgent);
+        }
+
+        .calendar-day .day-number {
+            font-size: 13px;
+            line-height: 1;
+        }
+
+        .calendar-day .day-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            margin-top: 2px;
+        }
+
+        .calendar-day .day-dot.urgent { background: var(--deadline-urgent); }
+        .calendar-day .day-dot.today { background: var(--deadline-today); }
+        .calendar-day .day-dot.future { background: var(--deadline-future); }
+
+        .calendar-events {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .calendar-events h4 {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .calendar-event {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+
+        .calendar-event:hover {
+            background: var(--bg-hover);
+        }
+
+        .calendar-event .event-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .calendar-event .event-dot.urgent { background: var(--deadline-urgent); }
+        .calendar-event .event-dot.today { background: var(--deadline-today); }
+        .calendar-event .event-dot.future { background: var(--deadline-future); }
+        .calendar-event .event-dot.done { background: var(--col-done); }
+
+        .calendar-event .event-info {
+            flex: 1;
+        }
+
+        .calendar-event .event-title {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .calendar-event .event-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .calendar-event .event-status {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+        }
+
         .footer {
             flex-shrink: 0;
             width: 100%;
@@ -965,6 +1413,15 @@
             .header-actions button .label {
                 display: inline;
             }
+
+            .calendar-modal {
+                max-width: 600px;
+            }
+
+            .notification-container {
+                top: 80px;
+                right: 24px;
+            }
         }
 
         @media (max-width: 400px) {
@@ -975,6 +1432,13 @@
             .modal textarea,
             .modal select { font-size: 14px; padding: 10px 12px; }
             .column-header h2 { font-size: 11px; }
+            .calendar-day { font-size: 11px; min-height: 32px; }
+            .notification-container {
+                top: 70px;
+                right: 10px;
+                left: 10px;
+                max-width: 100%;
+            }
         }
 
         @media (max-width: 500px) {
@@ -997,6 +1461,13 @@
                 gap: 1.2rem;
                 font-size: 0.7rem;
             }
+            .calendar-btn .badge-calendar {
+                width: 16px;
+                height: 16px;
+                font-size: 8px;
+                top: -2px;
+                right: -2px;
+            }
         }
 
         @media (display-mode: standalone) {
@@ -1017,6 +1488,9 @@
 </head>
 <body>
     <div class="app-wrapper">
+        <!-- ========== КОНТЕЙНЕР УВЕДОМЛЕНИЙ ========== -->
+        <div class="notification-container" id="notificationContainer"></div>
+
         <header class="header">
             <div class="header-left">
                 <div class="board-selector" id="boardSelector">
@@ -1037,15 +1511,28 @@
                 </div>
             </div>
             <div class="header-actions">
+                <button id="calendarBtn" class="calendar-btn" title="Календарь">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span class="label">Календарь</span>
+                    <span class="badge-calendar" id="calendarBadge">0</span>
+                </button>
                 <button id="archiveToggleBtn" title="Архив">
                     <i class="fas fa-archive"></i>
                     <span class="label">Архив</span>
                     <span class="badge-archive" id="archiveBadge">0</span>
                 </button>
-                <button id="exportBtn" title="Экспорт">
-                    <i class="fas fa-file-export"></i>
-                    <span class="label">Экспорт</span>
-                </button>
+                <div class="export-dropdown">
+                    <button id="exportBtn" title="Экспорт">
+                        <i class="fas fa-file-export"></i>
+                        <span class="label">Экспорт</span>
+                        <i class="fas fa-chevron-down" style="font-size:10px;margin-left:2px;"></i>
+                    </button>
+                    <div class="dropdown-menu" id="exportDropdown">
+                        <button data-format="json"><i class="fas fa-code"></i> JSON</button>
+                        <button data-format="csv"><i class="fas fa-table"></i> CSV</button>
+                        <button data-format="markdown"><i class="fas fa-file-alt"></i> Markdown</button>
+                    </div>
+                </div>
                 <button id="importBtn" title="Импорт">
                     <i class="fas fa-file-import"></i>
                     <span class="label">Импорт</span>
@@ -1083,6 +1570,7 @@
             </div>
         </div>
 
+        <!-- ========== МОДАЛКИ ========== -->
         <div class="modal-overlay" id="cardModal">
             <div class="modal">
                 <h3 id="modalTitle"><i class="fas fa-plus-circle"></i> Новая карточка</h3>
@@ -1099,6 +1587,8 @@
                     <option value="orange">🟠 Идея</option>
                     <option value="purple">🟣 Проект</option>
                 </select>
+                <label>Дедлайн</label>
+                <input type="datetime-local" id="cardDeadlineInput" />
                 <div class="modal-actions">
                     <button class="btn-secondary" id="modalCancelBtn"><i class="fas fa-times"></i> Отмена</button>
                     <button class="btn-primary" id="modalSaveBtn"><i class="fas fa-save"></i> Сохранить</button>
@@ -1118,6 +1608,26 @@
             </div>
         </div>
 
+        <div class="modal-overlay" id="calendarModal">
+            <div class="modal calendar-modal">
+                <div class="calendar-header">
+                    <h3><i class="fas fa-calendar-alt"></i> <span id="calendarTitle">Календарь</span></h3>
+                    <div class="calendar-nav">
+                        <button id="calendarPrev"><i class="fas fa-chevron-left"></i></button>
+                        <button id="calendarNext"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+                <div class="calendar-events" id="calendarEvents">
+                    <h4>Задачи на выбранную дату</h4>
+                    <div id="calendarEventsList"></div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="calendarCloseBtn"><i class="fas fa-times"></i> Закрыть</button>
+                </div>
+            </div>
+        </div>
+
         <input type="file" id="fileInput" accept=".json">
     </div>
 
@@ -1131,12 +1641,15 @@
             const STORAGE_KEY = 'kanban_data';
             const SHOW_ARCHIVE_KEY = 'kanban_show_archive';
             const ARCHIVE_DAYS = 3;
+            const NOTIFICATION_DURATION = 5000;
 
             const COLUMNS = [
                 { id: 'todo', title: 'В очереди', icon: 'fa-clipboard-list', color: 'var(--col-todo)' },
                 { id: 'progress', title: 'В процессе', icon: 'fa-rocket', color: 'var(--col-progress)' },
                 { id: 'done', title: 'Готово', icon: 'fa-check-circle', color: 'var(--col-done)' }
             ];
+
+            const COLUMN_ORDER = ['todo', 'progress', 'done'];
 
             let data = {
                 boards: {},
@@ -1148,9 +1661,51 @@
             let targetColumnId = null;
             let saveTimeout = null;
             let editingBoardId = null;
+            let calendarCurrentDate = new Date();
+            let calendarSelectedDate = null;
 
             // ================================================================
-            // 2. LOCALSTORAGE
+            // 2. УВЕДОМЛЕНИЯ
+            // ================================================================
+            function showNotification(title, text, type = 'info', duration = NOTIFICATION_DURATION) {
+                const container = document.getElementById('notificationContainer');
+                const icons = {
+                    success: '✅',
+                    warning: '⚠️',
+                    danger: '❌',
+                    info: 'ℹ️'
+                };
+
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.innerHTML = `
+                    <div class="notification-icon">${icons[type] || 'ℹ️'}</div>
+                    <div class="notification-content">
+                        <div class="notification-title">${title}</div>
+                        <div class="notification-text">${text}</div>
+                        <div class="notification-time">${new Date().toLocaleTimeString()}</div>
+                    </div>
+                `;
+
+                notification.addEventListener('click', function() {
+                    this.classList.add('hiding');
+                    setTimeout(() => this.remove(), 300);
+                });
+
+                container.appendChild(notification);
+
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.classList.add('hiding');
+                        setTimeout(() => notification.remove(), 300);
+                    }
+                }, duration);
+
+                return notification;
+            }
+
+            // ================================================================
+            // 3. LOCALSTORAGE
             // ================================================================
             function loadFromStorage() {
                 const raw = localStorage.getItem(STORAGE_KEY);
@@ -1185,6 +1740,7 @@
                 updateSaveStatus(true);
                 updateArchiveBadge();
                 updateBoardSelector();
+                updateCalendarBadge();
             }
 
             function saveToStorageDebounced() {
@@ -1210,7 +1766,7 @@
             }
 
             // ================================================================
-            // 3. РАБОТА С ДОСКАМИ
+            // 4. РАБОТА С ДОСКАМИ
             // ================================================================
             function getCurrentBoard() {
                 if (!data.currentBoardId || !data.boards[data.currentBoardId]) {
@@ -1248,14 +1804,52 @@
                 return getCards().filter(c => c.column === 'archive');
             }
 
+            function getCardsWithDeadline() {
+                return getCards().filter(c => c.deadline);
+            }
+
             function updateArchiveBadge() {
                 const count = getArchivedCards().length;
                 const badge = document.getElementById('archiveBadge');
                 if (badge) badge.textContent = count;
             }
 
+            function updateCalendarBadge() {
+                const count = getCardsWithDeadline().filter(c => c.column !== 'archive' && c.column !== 'done').length;
+                const badge = document.getElementById('calendarBadge');
+                if (badge) badge.textContent = count;
+            }
+
+            function getNextColumn(columnId) {
+                const index = COLUMN_ORDER.indexOf(columnId);
+                if (index === -1 || index === COLUMN_ORDER.length - 1) return null;
+                return COLUMN_ORDER[index + 1];
+            }
+
+            function moveCardToNextColumn(cardId) {
+                const cards = getCards();
+                const card = cards.find(c => c.id === cardId);
+                if (!card) return false;
+
+                const nextColumn = getNextColumn(card.column);
+                if (!nextColumn) {
+                    showNotification('Информация', 'Карточка уже в последней колонке', 'info');
+                    return false;
+                }
+
+                card.column = nextColumn;
+                if (nextColumn === 'done') {
+                    card.completedAt = Date.now();
+                }
+                setCards(cards);
+                saveToStorageDebounced();
+                render();
+                showNotification('Перемещено', `"${card.title}" → ${COLUMNS.find(c => c.id === nextColumn).title}`, 'success');
+                return true;
+            }
+
             // ================================================================
-            // 4. ВЫПАДАЮЩИЙ СПИСОК ДОСОК
+            // 5. ВЫПАДАЮЩИЙ СПИСОК ДОСОК
             // ================================================================
             function updateBoardSelector() {
                 const nameEl = document.getElementById('boardName');
@@ -1306,7 +1900,7 @@
             }
 
             // ================================================================
-            // 5. ПЕРЕИМЕНОВАНИЕ ДОСКИ
+            // 6. ПЕРЕИМЕНОВАНИЕ ДОСКИ
             // ================================================================
             function startRenameBoard(boardId, element) {
                 if (editingBoardId) return;
@@ -1346,7 +1940,7 @@
             }
 
             // ================================================================
-            // 6. ПЕРЕКЛЮЧЕНИЕ / УДАЛЕНИЕ ДОСОК
+            // 7. ПЕРЕКЛЮЧЕНИЕ / УДАЛЕНИЕ ДОСОК
             // ================================================================
             function switchBoard(boardId) {
                 if (boardId === data.currentBoardId) return;
@@ -1358,11 +1952,12 @@
                 saveToStorage();
                 closeBoardDropdown();
                 render();
+                showNotification('Переключено', `Доска: ${data.boards[boardId].name}`, 'info');
             }
 
             function deleteBoard(boardId) {
                 if (Object.keys(data.boards).length <= 1) {
-                    alert('Нельзя удалить единственную доску.');
+                    showNotification('Ошибка', 'Нельзя удалить единственную доску', 'danger');
                     return;
                 }
                 if (!confirm('Удалить доску "' + data.boards[boardId].name + '" со всеми карточками?')) return;
@@ -1375,6 +1970,7 @@
                 saveToStorage();
                 closeBoardDropdown();
                 render();
+                showNotification('Удалено', 'Доска удалена', 'danger');
             }
 
             function createNewBoard(name) {
@@ -1387,6 +1983,7 @@
                 saveToStorage();
                 closeBoardDropdown();
                 render();
+                showNotification('Создано', `Доска "${name}" создана`, 'success');
             }
 
             function openBoardModal() {
@@ -1407,7 +2004,7 @@
             }
 
             // ================================================================
-            // 7. ВЫПАДАЮЩИЙ СПИСОК (открытие/закрытие)
+            // 8. ВЫПАДАЮЩИЙ СПИСОК (открытие/закрытие)
             // ================================================================
             let isBoardDropdownOpen = false;
 
@@ -1425,17 +2022,38 @@
             }
 
             // ================================================================
-            // 8. ДАННЫЕ (дефолтные карточки)
+            // 9. ДАННЫЕ (дефолтные карточки)
             // ================================================================
             function getDefaultCards() {
-                return [
-                    { id: generateId(), title: 'Сделать дизайн', desc: 'Фигма, 10 экранов', tag: 'blue',
-                        column: 'todo' },
-                    { id: generateId(), title: 'Написать код', desc: 'React + Node.js', tag: 'orange',
-                        column: 'progress' },
-                    { id: generateId(), title: 'Задеплоить', desc: 'На VPS с nginx', tag: 'green', column: 'done',
-                        completedAt: Date.now() }
-                ];
+                const now = new Date();
+                const tomorrow = new Date(now);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const nextWeek = new Date(now);
+                nextWeek.setDate(nextWeek.getDate() + 7);
+
+                return [{
+                    id: generateId(),
+                    title: 'Сделать дизайн',
+                    desc: 'Фигма, 10 экранов',
+                    tag: 'blue',
+                    column: 'todo',
+                    deadline: tomorrow.toISOString()
+                }, {
+                    id: generateId(),
+                    title: 'Написать код',
+                    desc: 'React + Node.js',
+                    tag: 'orange',
+                    column: 'progress',
+                    deadline: nextWeek.toISOString()
+                }, {
+                    id: generateId(),
+                    title: 'Задеплоить',
+                    desc: 'На VPS с nginx',
+                    tag: 'green',
+                    column: 'done',
+                    completedAt: Date.now(),
+                    deadline: now.toISOString()
+                }];
             }
 
             function generateId() {
@@ -1443,7 +2061,67 @@
             }
 
             // ================================================================
-            // 9. АВТОАРХИВ
+            // 10. ПРОВЕРКА ДЕДЛАЙНОВ (уведомления)
+            // ================================================================
+            let deadlineChecked = false;
+
+            function checkDeadlines() {
+                const cards = getCards();
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+
+                let urgentCount = 0;
+                let todayCount = 0;
+                let tomorrowCount = 0;
+
+                cards.forEach(card => {
+                    if (!card.deadline || card.column === 'archive') return;
+                    const deadline = new Date(card.deadline);
+
+                    if (card.column !== 'done') {
+                        if (deadline < now) {
+                            urgentCount++;
+                        } else if (deadline.toDateString() === today.toDateString()) {
+                            todayCount++;
+                        } else if (deadline.toDateString() === tomorrow.toDateString()) {
+                            tomorrowCount++;
+                        }
+                    }
+                });
+
+                // Показываем уведомления только при первой проверке после загрузки
+                if (!deadlineChecked) {
+                    if (urgentCount > 0) {
+                        showNotification('🔥 Просрочено!',
+                            `${urgentCount} ${getDeclension(urgentCount, 'задача', 'задачи', 'задач')} просрочено`,
+                            'danger');
+                    }
+                    if (todayCount > 0) {
+                        showNotification('⏰ Сегодня!',
+                            `${todayCount} ${getDeclension(todayCount, 'задача', 'задачи', 'задач')} на сегодня`,
+                            'warning');
+                    }
+                    if (tomorrowCount > 0) {
+                        showNotification('📅 Завтра',
+                            `${tomorrowCount} ${getDeclension(tomorrowCount, 'задача', 'задачи', 'задач')} на завтра`,
+                            'info');
+                    }
+                    deadlineChecked = true;
+                }
+
+                return { urgent: urgentCount, today: todayCount, tomorrow: tomorrowCount };
+            }
+
+            function getDeclension(n, one, few, many) {
+                if (n % 10 === 1 && n % 100 !== 11) return one;
+                if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return few;
+                return many;
+            }
+
+            // ================================================================
+            // 11. АВТОАРХИВ
             // ================================================================
             function checkArchive() {
                 const now = Date.now();
@@ -1466,13 +2144,17 @@
                     setCards(cards);
                     saveToStorage();
                     render();
+                    const archived = cards.filter(c => c.autoArchived).length;
+                    showNotification('Архивация',
+                        `${archived} ${getDeclension(archived, 'задача', 'задачи', 'задач')} автоматически архивирована`,
+                        'info');
                 }
             }
 
             setInterval(checkArchive, 10000);
 
             // ================================================================
-            // 10. РЕНДЕРИНГ
+            // 12. РЕНДЕРИНГ
             // ================================================================
             function render() {
                 const board = document.getElementById('board');
@@ -1482,7 +2164,7 @@
                 const columnsToRender = [...COLUMNS];
                 if (showArchive) {
                     columnsToRender.push({ id: 'archive', title: 'Архив', icon: 'fa-archive',
-                    color: 'var(--col-archive)' });
+                        color: 'var(--col-archive)' });
                 }
 
                 columnsToRender.forEach(col => {
@@ -1515,8 +2197,12 @@
                             '<i class="fas fa-inbox"></i> Нет карточек';
                         list.appendChild(empty);
                     } else {
-                        colCards.forEach(card => {
-                            list.appendChild(createCardWrapper(card));
+                        colCards.forEach((card, index) => {
+                            const wrapper = createCardWrapper(card);
+                            if (index === colCards.length - 1) {
+                                wrapper.classList.add('card-enter');
+                            }
+                            list.appendChild(wrapper);
                         });
                     }
 
@@ -1534,14 +2220,20 @@
 
                 setupDragAndDrop();
                 updateArchiveBadge();
+                updateCalendarBadge();
                 updateBoardSelector();
 
                 const btn = document.getElementById('archiveToggleBtn');
                 btn.style.color = showArchive ? 'var(--btn-primary)' : '';
+
+                // Проверяем дедлайны после рендера
+                if (!deadlineChecked) {
+                    setTimeout(checkDeadlines, 500);
+                }
             }
 
             // ================================================================
-            // 11. КАРТОЧКА
+            // 13. КАРТОЧКА
             // ================================================================
             function createCardWrapper(card) {
                 const wrapper = document.createElement('div');
@@ -1569,6 +2261,34 @@
                     const labels = { red: 'Важно', green: 'Работа', blue: 'Личное', orange: 'Идея', purple: 'Проект' };
                     tag.textContent = labels[card.tag] || card.tag;
                     inner.appendChild(tag);
+                }
+
+                // Дедлайн
+                if (card.deadline) {
+                    const deadline = new Date(card.deadline);
+                    const now = new Date();
+                    const isDone = card.column === 'done' || card.column === 'archive';
+                    let className = 'card-deadline future';
+                    let icon = 'fa-clock';
+
+                    if (isDone) {
+                        className = 'card-deadline done';
+                        icon = 'fa-check-circle';
+                    } else if (deadline < now) {
+                        className = 'card-deadline urgent';
+                        icon = 'fa-exclamation-circle';
+                    } else if (deadline.toDateString() === now.toDateString()) {
+                        className = 'card-deadline today';
+                        icon = 'fa-hourglass-half';
+                    }
+
+                    const deadlineEl = document.createElement('div');
+                    deadlineEl.className = className;
+                    deadlineEl.innerHTML = `
+                        <i class="fas ${icon}"></i>
+                        ${formatDate(deadline)}
+                    `;
+                    inner.appendChild(deadlineEl);
                 }
 
                 if (card.column === 'archive' && card.autoArchived) {
@@ -1629,211 +2349,91 @@
                 inner.appendChild(actions);
                 wrapper.appendChild(inner);
 
-                // ----- TOUCH DRAG -----
-                let dragData = null;
-                let longPressTimer = null;
-                let startTouchX = 0;
-                let startTouchY = 0;
-                let isDragging = false;
+                // ========== СВАЙП-ЖЕСТЫ ==========
+                let touchStartX = 0;
+                let touchStartY = 0;
+                let isSwiping = false;
+                let swipeTimeout = null;
 
                 wrapper.addEventListener('touchstart', function(e) {
                     if (card.column === 'archive') return;
                     if (e.touches.length !== 1) return;
 
                     const touch = e.touches[0];
-                    startTouchX = touch.clientX;
-                    startTouchY = touch.clientY;
-                    isDragging = false;
-
-                    longPressTimer = setTimeout(function() {
-                        isDragging = true;
-
-                        const wrapperEl = document.getElementById('boardWrapper');
-                        if (wrapperEl) wrapperEl.classList.add('dragging-active');
-                        document.body.style.overflow = 'hidden';
-
-                        wrapper.classList.add('dragging');
-
-                        const cloneInner = inner.cloneNode(true);
-                        const clone = document.createElement('div');
-                        clone.className = 'card-wrapper drag-overlay';
-                        clone.appendChild(cloneInner);
-
-                        const rect = wrapper.getBoundingClientRect();
-                        const offsetX = touch.clientX - rect.left;
-                        const offsetY = touch.clientY - rect.top;
-
-                        clone.style.left = (touch.clientX - offsetX) + 'px';
-                        clone.style.top = (touch.clientY - offsetY) + 'px';
-                        clone.style.width = rect.width + 'px';
-                        clone.dataset.cardId = card.id;
-                        clone.style.pointerEvents = 'none';
-
-                        clone.dataset.offsetX = offsetX;
-                        clone.dataset.offsetY = offsetY;
-
-                        document.body.appendChild(clone);
-
-                        document.querySelectorAll('.card-list').forEach(el => {
-                            el.classList.add('drag-over');
-                        });
-
-                        if (navigator.vibrate) {
-                            navigator.vibrate(15);
-                        }
-
-                        dragData = {
-                            cardId: card.id,
-                            targetList: null,
-                            moved: false,
-                            clone: clone,
-                            offsetX: offsetX,
-                            offsetY: offsetY
-                        };
-                    }, 350);
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    isSwiping = false;
                 }, { passive: true });
 
                 wrapper.addEventListener('touchmove', function(e) {
-                    if (e.touches.length !== 1) {
-                        clearTimeout(longPressTimer);
-                        longPressTimer = null;
-                        return;
-                    }
+                    if (card.column === 'archive') return;
+                    if (e.touches.length !== 1) return;
 
                     const touch = e.touches[0];
-                    const dx = touch.clientX - startTouchX;
-                    const dy = touch.clientY - startTouchY;
+                    const dx = touch.clientX - touchStartX;
+                    const dy = touch.clientY - touchStartY;
 
-                    if (!isDragging && longPressTimer && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
-                        clearTimeout(longPressTimer);
-                        longPressTimer = null;
-                        return;
-                    }
+                    if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                        isSwiping = true;
+                        e.preventDefault();
 
-                    if (!isDragging || !dragData) {
-                        return;
-                    }
+                        // Визуальный фидбек
+                        const translateX = Math.min(Math.max(dx, -100), 100);
+                        wrapper.style.transform = `translateX(${translateX}px)`;
+                        wrapper.style.opacity = 1 - Math.abs(translateX) / 200;
 
-                    e.preventDefault();
-
-                    dragData.moved = true;
-
-                    const clone = dragData.clone;
-                    if (clone) {
-                        const offsetX = parseFloat(clone.dataset.offsetX) || 0;
-                        const offsetY = parseFloat(clone.dataset.offsetY) || 0;
-                        clone.style.left = (touch.clientX - offsetX) + 'px';
-                        clone.style.top = (touch.clientY - offsetY) + 'px';
-
-                        document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
-                        const el = document.elementFromPoint(touch.clientX, touch.clientY);
-                        if (el) {
-                            const list = el.closest('.card-list');
-                            if (list) {
-                                list.classList.add('drag-over');
-                                dragData.targetList = list;
-                            } else {
-                                dragData.targetList = null;
-                            }
+                        if (swipeTimeout) {
+                            clearTimeout(swipeTimeout);
+                            swipeTimeout = null;
                         }
                     }
                 }, { passive: false });
 
                 wrapper.addEventListener('touchend', function(e) {
-                    if (longPressTimer) {
-                        clearTimeout(longPressTimer);
-                        longPressTimer = null;
-                    }
-
-                    if (!isDragging || !dragData) {
-                        document.body.style.overflow = '';
-                        const wrapperEl = document.getElementById('boardWrapper');
-                        if (wrapperEl) wrapperEl.classList.remove('dragging-active');
-                        return;
-                    }
+                    if (card.column === 'archive') return;
+                    if (!isSwiping) return;
 
                     const touch = e.changedTouches[0];
+                    const dx = touch.clientX - touchStartX;
 
-                    if (dragData.clone && dragData.clone.parentNode) {
-                        dragData.clone.parentNode.removeChild(dragData.clone);
+                    wrapper.style.transform = '';
+                    wrapper.style.opacity = '';
+
+                    if (dx > 60) {
+                        // Свайп вправо - в следующую колонку
+                        wrapper.classList.add('swipe-right');
+                        swipeTimeout = setTimeout(() => {
+                            wrapper.classList.remove('swipe-right');
+                            moveCardToNextColumn(card.id);
+                        }, 300);
+                    } else {
+                        // Сброс
+                        wrapper.classList.add('card-enter');
+                        setTimeout(() => wrapper.classList.remove('card-enter'), 300);
                     }
 
-                    wrapper.classList.remove('dragging');
-                    document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
-                    document.body.style.overflow = '';
-                    const wrapperEl = document.getElementById('boardWrapper');
-                    if (wrapperEl) wrapperEl.classList.remove('dragging-active');
-
-                    if (dragData.moved && dragData.targetList) {
-                        const targetList = dragData.targetList;
-                        const newColumnId = targetList.dataset.columnId;
-                        const cards = getCards();
-                        const cardObj = cards.find(c => c.id === card.id);
-
-                        if (cardObj && newColumnId) {
-                            if (cardObj.column !== newColumnId) {
-                                if (newColumnId === 'archive') {
-                                    cardObj.column = 'archive';
-                                    cardObj.archivedAt = Date.now();
-                                    cardObj.manuallyArchived = true;
-                                    delete cardObj.autoArchived;
-                                } else {
-                                    if (newColumnId === 'done' && cardObj.column !== 'done') {
-                                        cardObj.completedAt = Date.now();
-                                        delete cardObj.manuallyArchived;
-                                        delete cardObj.autoArchived;
-                                    }
-                                    cardObj.column = newColumnId;
-                                }
-
-                                setCards(cards);
-                                saveToStorageDebounced();
-                                render();
-                            } else {
-                                const cardIds = [];
-                                targetList.querySelectorAll('.card-wrapper').forEach(w => {
-                                    const id = w.dataset.cardId;
-                                    if (id) cardIds.push(id);
-                                });
-
-                                const cardMap = {};
-                                cards.forEach(c => cardMap[c.id] = c);
-                                const newCards = [];
-                                cardIds.forEach(id => {
-                                    if (cardMap[id]) {
-                                        newCards.push(cardMap[id]);
-                                        delete cardMap[id];
-                                    }
-                                });
-                                Object.values(cardMap).forEach(c => newCards.push(c));
-
-                                setCards(newCards);
-                                saveToStorageDebounced();
-                                render();
-                            }
-                        }
-                    }
-
-                    isDragging = false;
-                    dragData = null;
+                    isSwiping = false;
+                    touchStartX = 0;
+                    touchStartY = 0;
                 }, { passive: true });
 
-                wrapper.addEventListener('touchcancel', function(e) {
-                    if (longPressTimer) {
-                        clearTimeout(longPressTimer);
-                        longPressTimer = null;
-                    }
-                    if (isDragging && dragData) {
-                        if (dragData.clone && dragData.clone.parentNode) {
-                            dragData.clone.parentNode.removeChild(dragData.clone);
-                        }
-                        wrapper.classList.remove('dragging');
-                        document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
-                        document.body.style.overflow = '';
-                        const wrapperEl = document.getElementById('boardWrapper');
-                        if (wrapperEl) wrapperEl.classList.remove('dragging-active');
-                        isDragging = false;
-                        dragData = null;
+                // ========== ДВОЙНОЙ ТАП ==========
+                let lastTapTime = 0;
+                wrapper.addEventListener('touchend', function(e) {
+                    if (card.column === 'archive') return;
+                    if (isSwiping) return;
+
+                    const now = Date.now();
+                    const timeSinceLastTap = now - lastTapTime;
+
+                    if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+                        // Двойной тап
+                        e.preventDefault();
+                        openModal(card.id);
+                        showNotification('Редактирование', `"${card.title}"`, 'info');
+                        lastTapTime = 0;
+                    } else {
+                        lastTapTime = now;
                     }
                 }, { passive: true });
 
@@ -1864,14 +2464,17 @@
                 });
 
                 wrapper.addEventListener('dblclick', function() {
-                    if (card.column !== 'archive') openModal(card.id);
+                    if (card.column !== 'archive') {
+                        openModal(card.id);
+                        showNotification('Редактирование', `"${card.title}"`, 'info');
+                    }
                 });
 
                 return wrapper;
             }
 
             // ================================================================
-            // 12. DRAG & DROP (десктоп)
+            // 14. DRAG & DROP (десктоп)
             // ================================================================
             function setupDragAndDrop() {
                 document.querySelectorAll('.card-list').forEach(list => {
@@ -1938,6 +2541,7 @@
                             setCards(cards);
                             saveToStorageDebounced();
                             render();
+                            showNotification('Архивировано', `"${card.title}"`, 'info');
                             return;
                         }
 
@@ -1971,6 +2575,8 @@
                         setCards(newCards);
                         saveToStorageDebounced();
                         render();
+                        showNotification('Перемещено', `"${card.title}" → ${COLUMNS.find(c => c.id === newColumnId).title}`,
+                            'success');
                     });
                 });
             }
@@ -1988,27 +2594,18 @@
             }
 
             // ================================================================
-            // 13. ДЕЙСТВИЯ
+            // 15. ДЕЙСТВИЯ
             // ================================================================
             function deleteCard(cardId) {
-                let cards = getCards();
-                cards = cards.filter(c => c.id !== cardId);
-                setCards(cards);
-                saveToStorageDebounced();
-                render();
-            }
-
-            function manuallyArchive(cardId) {
                 const cards = getCards();
                 const card = cards.find(c => c.id === cardId);
                 if (!card) return;
-                card.column = 'archive';
-                card.archivedAt = Date.now();
-                card.manuallyArchived = true;
-                delete card.autoArchived;
-                setCards(cards);
+                const title = card.title;
+                let cardsNew = cards.filter(c => c.id !== cardId);
+                setCards(cardsNew);
                 saveToStorageDebounced();
                 render();
+                showNotification('Удалено', `"${title}"`, 'danger');
             }
 
             function restoreFromArchive(cardId) {
@@ -2022,16 +2619,18 @@
                 setCards(cards);
                 saveToStorageDebounced();
                 render();
+                showNotification('Восстановлено', `"${card.title}"`, 'success');
             }
 
             // ================================================================
-            // 14. МОДАЛКА КАРТОЧКИ
+            // 16. МОДАЛКА КАРТОЧКИ
             // ================================================================
             function openModal(cardId, columnId) {
                 const overlay = document.getElementById('cardModal');
                 const titleInput = document.getElementById('cardTitleInput');
                 const descInput = document.getElementById('cardDescInput');
                 const tagInput = document.getElementById('cardTagInput');
+                const deadlineInput = document.getElementById('cardDeadlineInput');
                 const modalTitle = document.getElementById('modalTitle');
                 const cards = getCards();
 
@@ -2044,6 +2643,7 @@
                     titleInput.value = card.title || '';
                     descInput.value = card.desc || '';
                     tagInput.value = card.tag || '';
+                    deadlineInput.value = card.deadline || '';
                 } else {
                     editingCardId = null;
                     targetColumnId = columnId || 'todo';
@@ -2051,6 +2651,7 @@
                     titleInput.value = '';
                     descInput.value = '';
                     tagInput.value = '';
+                    deadlineInput.value = '';
                 }
 
                 overlay.classList.add('active');
@@ -2067,6 +2668,7 @@
                 const title = document.getElementById('cardTitleInput').value.trim() || 'Без названия';
                 const desc = document.getElementById('cardDescInput').value.trim();
                 const tag = document.getElementById('cardTagInput').value || '';
+                const deadline = document.getElementById('cardDeadlineInput').value || null;
                 let cards = getCards();
 
                 if (editingCardId) {
@@ -2075,7 +2677,9 @@
                         card.title = title;
                         card.desc = desc;
                         card.tag = tag;
+                        card.deadline = deadline;
                     }
+                    showNotification('Обновлено', `"${title}"`, 'success');
                 } else {
                     const newCard = {
                         id: generateId(),
@@ -2083,9 +2687,11 @@
                         desc: desc,
                         tag: tag,
                         column: targetColumnId || 'todo',
+                        deadline: deadline,
                         completedAt: targetColumnId === 'done' ? Date.now() : null
                     };
                     cards.push(newCard);
+                    showNotification('Создано', `"${title}"`, 'success');
                 }
 
                 setCards(cards);
@@ -2095,29 +2701,335 @@
             }
 
             // ================================================================
-            // 15. АРХИВ (переключение видимости)
+            // 17. АРХИВ (переключение видимости)
             // ================================================================
             function toggleArchive() {
                 showArchive = !showArchive;
                 localStorage.setItem(SHOW_ARCHIVE_KEY, String(showArchive));
                 render();
+                showNotification(showArchive ? 'Архив открыт' : 'Архив скрыт', '', 'info');
             }
 
             // ================================================================
-            // 16. ЭКСПОРТ / ИМПОРТ
+            // 18. КАЛЕНДАРЬ
             // ================================================================
-            function exportData() {
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            function formatDate(date) {
+                return date.toLocaleDateString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            }
+
+            function formatTime(date) {
+                return date.toLocaleTimeString('ru-RU', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            function openCalendar() {
+                const modal = document.getElementById('calendarModal');
+                modal.classList.add('active');
+                renderCalendar();
+            }
+
+            function closeCalendar() {
+                document.getElementById('calendarModal').classList.remove('active');
+            }
+
+            function renderCalendar() {
+                const year = calendarCurrentDate.getFullYear();
+                const month = calendarCurrentDate.getMonth();
+
+                document.getElementById('calendarTitle').textContent =
+                    new Date(year, month).toLocaleDateString('ru-RU', {
+                        month: 'long',
+                        year: 'numeric'
+                    });
+
+                const grid = document.getElementById('calendarGrid');
+                grid.innerHTML = '';
+
+                const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+                weekdays.forEach(day => {
+                    const el = document.createElement('div');
+                    el.className = 'calendar-weekday';
+                    el.textContent = day;
+                    grid.appendChild(el);
+                });
+
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const daysInMonth = lastDay.getDate();
+                const startOffset = (firstDay.getDay() + 6) % 7;
+
+                const today = new Date();
+                const todayStr = today.toDateString();
+
+                // Предыдущий месяц
+                const prevMonthLastDay = new Date(year, month, 0).getDate();
+                for (let i = startOffset - 1; i >= 0; i--) {
+                    const day = prevMonthLastDay - i;
+                    const date = new Date(year, month - 1, day);
+                    const el = createCalendarDay(date, true);
+                    grid.appendChild(el);
+                }
+
+                // Текущий месяц
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    const el = createCalendarDay(date, false);
+                    if (date.toDateString() === todayStr) {
+                        el.classList.add('today');
+                    }
+                    if (calendarSelectedDate && date.toDateString() === calendarSelectedDate.toDateString()) {
+                        el.classList.add('selected');
+                    }
+                    grid.appendChild(el);
+                }
+
+                // Следующий месяц
+                const totalDays = startOffset + daysInMonth;
+                const remainingDays = 42 - totalDays;
+                for (let day = 1; day <= remainingDays; day++) {
+                    const date = new Date(year, month + 1, day);
+                    const el = createCalendarDay(date, true);
+                    grid.appendChild(el);
+                }
+
+                renderCalendarEvents();
+            }
+
+            function createCalendarDay(date, isOtherMonth) {
+                const el = document.createElement('div');
+                el.className = 'calendar-day';
+                if (isOtherMonth) el.classList.add('other-month');
+
+                const dayOfWeek = date.getDay();
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    el.classList.add('weekend');
+                }
+
+                const dayNumber = document.createElement('span');
+                dayNumber.className = 'day-number';
+                dayNumber.textContent = date.getDate();
+                el.appendChild(dayNumber);
+
+                // Проверяем наличие дедлайнов
+                const cards = getCardsWithDeadline();
+                const hasDeadline = cards.some(c => {
+                    if (!c.deadline) return false;
+                    const d = new Date(c.deadline);
+                    return d.toDateString() === date.toDateString() && c.column !== 'archive';
+                });
+
+                if (hasDeadline) {
+                    const dot = document.createElement('span');
+                    dot.className = 'day-dot';
+
+                    const now = new Date();
+                    const hasUrgent = cards.some(c => {
+                        if (!c.deadline) return false;
+                        const d = new Date(c.deadline);
+                        return d.toDateString() === date.toDateString() &&
+                            d < now &&
+                            c.column !== 'archive' &&
+                            c.column !== 'done';
+                    });
+
+                    const hasToday = cards.some(c => {
+                        if (!c.deadline) return false;
+                        const d = new Date(c.deadline);
+                        return d.toDateString() === date.toDateString() &&
+                            d.toDateString() === now.toDateString() &&
+                            c.column !== 'archive' &&
+                            c.column !== 'done';
+                    });
+
+                    if (hasUrgent) dot.classList.add('urgent');
+                    else if (hasToday) dot.classList.add('today');
+                    else dot.classList.add('future');
+
+                    el.appendChild(dot);
+                    el.classList.add('has-deadline');
+                }
+
+                el.addEventListener('click', function() {
+                    calendarSelectedDate = date;
+                    renderCalendar();
+                });
+
+                return el;
+            }
+
+            function renderCalendarEvents() {
+                const list = document.getElementById('calendarEventsList');
+                list.innerHTML = '';
+
+                if (!calendarSelectedDate) {
+                    list.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px 0; font-size: 13px;">Выберите дату в календаре</div>';
+                    return;
+                }
+
+                const cards = getCards();
+                const events = cards.filter(c => {
+                    if (!c.deadline) return false;
+                    const d = new Date(c.deadline);
+                    return d.toDateString() === calendarSelectedDate.toDateString();
+                });
+
+                if (events.length === 0) {
+                    list.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px 0; font-size: 13px;">Нет задач на эту дату</div>';
+                    return;
+                }
+
+                events.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+                events.forEach(card => {
+                    const el = document.createElement('div');
+                    el.className = 'calendar-event';
+
+                    const deadlineDate = new Date(card.deadline);
+                    const now = new Date();
+                    let status = 'future';
+                    if (card.column === 'done' || card.column === 'archive') status = 'done';
+                    else if (deadlineDate < now) status = 'urgent';
+                    else if (deadlineDate.toDateString() === now.toDateString()) status = 'today';
+
+                    const dot = document.createElement('span');
+                    dot.className = 'event-dot ' + status;
+                    el.appendChild(dot);
+
+                    const info = document.createElement('div');
+                    info.className = 'event-info';
+
+                    const title = document.createElement('div');
+                    title.className = 'event-title';
+                    title.textContent = card.title;
+                    info.appendChild(title);
+
+                    const meta = document.createElement('div');
+                    meta.className = 'event-meta';
+                    const time = formatTime(deadlineDate);
+                    const columnLabel = COLUMNS.find(c => c.id === card.column);
+                    const columnName = columnLabel ? columnLabel.title : card.column;
+                    meta.textContent = `${time} • ${columnName}`;
+                    info.appendChild(meta);
+
+                    el.appendChild(info);
+
+                    const statusLabel = document.createElement('span');
+                    statusLabel.className = 'event-status';
+                    const statusMap = {
+                        urgent: '🔥 Срочно',
+                        today: '⏰ Сегодня',
+                        future: '📅 Запланировано',
+                        done: '✅ Готово'
+                    };
+                    statusLabel.textContent = statusMap[status] || status;
+                    el.appendChild(statusLabel);
+
+                    el.addEventListener('click', function() {
+                        closeCalendar();
+                        openModal(card.id);
+                    });
+
+                    list.appendChild(el);
+                });
+            }
+
+            // ================================================================
+            // 19. ЭКСПОРТ
+            // ================================================================
+            function exportData(format = 'json') {
+                const boardData = {
+                    boards: data.boards,
+                    currentBoardId: data.currentBoardId,
+                    exportedAt: new Date().toISOString(),
+                    version: '1.0'
+                };
+
+                let content, filename, mimeType;
+
+                switch (format) {
+                    case 'json':
+                        content = JSON.stringify(boardData, null, 2);
+                        filename = `kanban_${new Date().toISOString().slice(0,10)}.json`;
+                        mimeType = 'application/json';
+                        break;
+
+                    case 'csv':
+                        const cards = getCards();
+                        let csv = 'Заголовок,Описание,Тег,Колонка,Дедлайн,Статус\n';
+                        cards.forEach(c => {
+                            const column = COLUMNS.find(col => col.id === c.column);
+                            const columnName = column ? column.title : c.column;
+                            const status = c.column === 'done' ? 'Выполнено' :
+                                c.column === 'archive' ? 'В архиве' :
+                                c.deadline && new Date(c.deadline) < new Date() ? 'Просрочено' : 'Активно';
+                            const deadline = c.deadline ? new Date(c.deadline).toLocaleDateString('ru-RU') : '';
+                            csv += `"${c.title || ''}","${c.desc || ''}","${c.tag || ''}","${columnName}","${deadline}","${status}"\n`;
+                        });
+                        content = csv;
+                        filename = `kanban_${new Date().toISOString().slice(0,10)}.csv`;
+                        mimeType = 'text/csv';
+                        break;
+
+                    case 'markdown':
+                        let md = `# Канбан-доска\n\n`;
+                        md += `**Дата экспорта:** ${new Date().toLocaleString('ru-RU')}\n\n`;
+                        md += `## Статистика\n`;
+                        const allCards = getCards();
+                        md += `- Всего задач: ${allCards.length}\n`;
+                        md += `- Активных: ${allCards.filter(c => c.column !== 'archive' && c.column !== 'done').length}\n`;
+                        md += `- Выполнено: ${allCards.filter(c => c.column === 'done').length}\n`;
+                        md += `- В архиве: ${allCards.filter(c => c.column === 'archive').length}\n\n`;
+
+                        COLUMNS.forEach(col => {
+                            const colCards = allCards.filter(c => c.column === col.id);
+                            md += `## ${col.title} (${colCards.length})\n\n`;
+                            if (colCards.length === 0) {
+                                md += `*Нет задач*\n\n`;
+                            } else {
+                                colCards.forEach((c, i) => {
+                                    const deadline = c.deadline ? ` *(до ${new Date(c.deadline).toLocaleDateString('ru-RU')})*` :
+                                        '';
+                                    const tag = c.tag ? ` [${c.tag}]` : '';
+                                    md += `${i + 1}. **${c.title}**${tag}${deadline}\n`;
+                                    if (c.desc) md += `   - ${c.desc}\n`;
+                                });
+                                md += '\n';
+                            }
+                        });
+
+                        content = md;
+                        filename = `kanban_${new Date().toISOString().slice(0,10)}.md`;
+                        mimeType = 'text/markdown';
+                        break;
+
+                    default:
+                        content = JSON.stringify(boardData, null, 2);
+                        filename = `kanban_${new Date().toISOString().slice(0,10)}.json`;
+                        mimeType = 'application/json';
+                }
+
+                const blob = new Blob([content], { type: mimeType + ';charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'kanban_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+                a.download = filename;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+
+                showNotification('Экспорт', `Данные экспортированы в ${format.toUpperCase()}`, 'success');
             }
 
+            // ================================================================
+            // 20. ИМПОРТ
+            // ================================================================
             function importData(file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -2128,20 +3040,20 @@
                                 data = parsed;
                                 saveToStorage();
                                 render();
-                                alert('Импорт выполнен!');
+                                showNotification('Импорт', 'Данные успешно импортированы', 'success');
                             }
                         } else {
-                            alert('Невалидный файл.');
+                            showNotification('Ошибка', 'Невалидный файл', 'danger');
                         }
                     } catch (_) {
-                        alert('Ошибка чтения файла.');
+                        showNotification('Ошибка', 'Не удалось прочитать файл', 'danger');
                     }
                 };
                 reader.readAsText(file);
             }
 
             // ================================================================
-            // 17. САЙДБАР — ВЫБОР ФОНА
+            // 21. САЙДБАР — ВЫБОР ФОНА
             // ================================================================
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebarToggle');
@@ -2185,11 +3097,12 @@
                     e.stopPropagation();
                     const bg = this.dataset.bg;
                     applyBgColor(bg);
+                    showNotification('Тема', `Фон изменен на ${bg === 'blue' ? 'синий' : 'черный'}`, 'info');
                 });
             });
 
             // ================================================================
-            // 18. ИНИЦИАЛИЗАЦИЯ
+            // 22. ИНИЦИАЛИЗАЦИЯ
             // ================================================================
             function init() {
                 showArchive = false;
@@ -2198,6 +3111,9 @@
                 loadFromStorage();
                 render();
                 checkArchive();
+
+                // Проверяем дедлайны с небольшой задержкой
+                setTimeout(checkDeadlines, 1000);
 
                 document.getElementById('boardSelector').addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -2209,6 +3125,13 @@
                     const selector = document.getElementById('boardSelector');
                     if (!dropdown.contains(e.target) && !selector.contains(e.target)) {
                         closeBoardDropdown();
+                    }
+
+                    // Закрываем экспорт-дропдаун
+                    const exportDropdown = document.getElementById('exportDropdown');
+                    const exportBtn = document.getElementById('exportBtn');
+                    if (!exportDropdown.contains(e.target) && !exportBtn.contains(e.target)) {
+                        exportDropdown.classList.remove('open');
                     }
                 });
 
@@ -2232,6 +3155,8 @@
                     if (e.key === 'Escape') {
                         closeBoardModal();
                         closeModal();
+                        closeCalendar();
+                        document.getElementById('exportDropdown').classList.remove('open');
                         if (editingBoardId) {
                             editingBoardId = null;
                             updateBoardSelector();
@@ -2259,7 +3184,25 @@
                     openModal(null, 'todo');
                 });
 
-                document.getElementById('exportBtn').addEventListener('click', exportData);
+                // Экспорт
+                const exportBtn = document.getElementById('exportBtn');
+                const exportDropdown = document.getElementById('exportDropdown');
+
+                exportBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    exportDropdown.classList.toggle('open');
+                });
+
+                exportDropdown.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const format = this.dataset.format;
+                        exportDropdown.classList.remove('open');
+                        exportData(format);
+                    });
+                });
+
+                // Импорт
                 document.getElementById('importBtn').addEventListener('click', function() {
                     document.getElementById('fileInput').click();
                 });
@@ -2270,6 +3213,31 @@
                     }
                     this.value = '';
                 });
+
+                // Календарь
+                document.getElementById('calendarBtn').addEventListener('click', openCalendar);
+                document.getElementById('calendarCloseBtn').addEventListener('click', closeCalendar);
+                document.getElementById('calendarModal').addEventListener('click', function(e) {
+                    if (e.target === this) closeCalendar();
+                });
+
+                document.getElementById('calendarPrev').addEventListener('click', function() {
+                    calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
+                    renderCalendar();
+                });
+
+                document.getElementById('calendarNext').addEventListener('click', function() {
+                    calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
+                    renderCalendar();
+                });
+
+                // Устанавливаем сегодняшнюю дату как выбранную по умолчанию
+                calendarSelectedDate = new Date();
+
+                // Периодическая проверка дедлайнов
+                setInterval(() => {
+                    checkDeadlines();
+                }, 60000); // Каждую минуту
             }
 
             if (document.readyState === 'loading') {
