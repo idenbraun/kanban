@@ -388,7 +388,7 @@
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 16px 16px calc(60px + var(--safe-area-bottom));
+            padding: 16px 16px calc(80px + var(--safe-area-bottom));
             -webkit-overflow-scrolling: touch;
         }
 
@@ -398,6 +398,7 @@
             gap: 16px;
             max-width: 600px;
             margin: 0 auto;
+            padding-bottom: 20px;
         }
 
         .column {
@@ -497,9 +498,9 @@
             overflow: hidden;
             border-radius: 10px;
             cursor: grab;
-            touch-action: none;
             user-select: none;
             -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
 
         .card-wrapper:active { cursor: grabbing; }
@@ -528,7 +529,6 @@
             padding: 12px 14px;
             transition: transform var(--transition);
             z-index: 2;
-            touch-action: none;
         }
 
         .card-title {
@@ -1473,7 +1473,7 @@
             }
 
             // ================================================================
-            // 11. КАРТОЧКА — БЕЗ СВАЙПА
+            // 11. КАРТОЧКА — ДОЛГОЕ НАЖАТИЕ ДЛЯ DRAG
             // ================================================================
             function createCardWrapper(card) {
                 const wrapper = document.createElement('div');
@@ -1562,94 +1562,132 @@
                 inner.appendChild(actions);
                 wrapper.appendChild(inner);
 
-                // ----- TOUCH DRAG (перетаскивание) -----
+                // ----- TOUCH DRAG (долгое нажатие) -----
                 let dragData = null;
+                let longPressTimer = null;
+                let isLongPress = false;
+                let startTouchX = 0;
+                let startTouchY = 0;
 
                 wrapper.addEventListener('touchstart', function(e) {
                     if (card.column === 'archive') return;
                     if (e.touches.length !== 1) return;
 
                     const touch = e.touches[0];
-                    dragData = {
-                        cardId: card.id,
-                        startX: touch.clientX,
-                        startY: touch.clientY,
-                        moved: false,
-                        targetColumnId: null,
-                        targetList: null
-                    };
+                    startTouchX = touch.clientX;
+                    startTouchY = touch.clientY;
+
+                    // Запускаем таймер для долгого нажатия (300ms)
+                    longPressTimer = setTimeout(function() {
+                        isLongPress = true;
+                        // Блокируем скролл
+                        document.body.style.overflow = 'hidden';
+
+                        dragData = {
+                            cardId: card.id,
+                            startX: startTouchX,
+                            startY: startTouchY,
+                            moved: false,
+                            targetColumnId: null,
+                            targetList: null
+                        };
+
+                        // Создаем оверлей
+                        wrapper.classList.add('dragging');
+                        const clone = wrapper.cloneNode(true);
+                        clone.className = 'card-wrapper drag-overlay';
+                        clone.style.left = (startTouchX - 140) + 'px';
+                        clone.style.top = (startTouchY - 40) + 'px';
+                        clone.dataset.cardId = card.id;
+                        document.body.appendChild(clone);
+
+                        document.querySelectorAll('.card-list').forEach(el => {
+                            el.classList.add('drag-over');
+                        });
+
+                        // Вибрация (если есть)
+                        if (navigator.vibrate) {
+                            navigator.vibrate(15);
+                        }
+                    }, 300);
                 }, { passive: true });
 
                 wrapper.addEventListener('touchmove', function(e) {
-                    if (!dragData || card.column === 'archive') return;
+                    if (!dragData || card.column === 'archive') {
+                        // Если палец сильно сместился до долгого нажатия - отменяем
+                        if (longPressTimer) {
+                            const touch = e.touches[0];
+                            const dx = touch.clientX - startTouchX;
+                            const dy = touch.clientY - startTouchY;
+                            if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                                clearTimeout(longPressTimer);
+                                longPressTimer = null;
+                            }
+                        }
+                        return;
+                    }
+
                     if (e.touches.length !== 1) return;
+                    e.preventDefault();
 
                     const touch = e.touches[0];
                     const dx = touch.clientX - dragData.startX;
                     const dy = touch.clientY - dragData.startY;
 
-                    if (Math.abs(dx) > 15 && Math.abs(dx) > Math.abs(dy) * 0.7) {
+                    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                         dragData.moved = true;
-                        e.preventDefault();
+                    }
 
-                        if (!wrapper.classList.contains('dragging')) {
-                            wrapper.classList.add('dragging');
-                            const clone = wrapper.cloneNode(true);
-                            clone.className = 'card-wrapper drag-overlay';
-                            clone.style.left = (touch.clientX - 140) + 'px';
-                            clone.style.top = (touch.clientY - 40) + 'px';
-                            clone.dataset.cardId = card.id;
-                            document.body.appendChild(clone);
+                    // Обновляем позицию оверлея
+                    const overlay = document.querySelector('.card-wrapper.drag-overlay');
+                    if (overlay) {
+                        overlay.style.left = (touch.clientX - 140) + 'px';
+                        overlay.style.top = (touch.clientY - 40) + 'px';
 
-                            document.querySelectorAll('.card-list').forEach(el => {
-                                el.classList.add('drag-over');
-                            });
-                        }
-
-                        const overlay = document.querySelector('.card-wrapper.drag-overlay');
-                        if (overlay) {
-                            overlay.style.left = (touch.clientX - 140) + 'px';
-                            overlay.style.top = (touch.clientY - 40) + 'px';
-
-                            // Находим элемент под пальцем
-                            const el = document.elementFromPoint(touch.clientX, touch.clientY);
-                            document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
-
-                            if (el) {
-                                const list = el.closest('.card-list');
-                                if (list) {
-                                    list.classList.add('drag-over');
-                                    dragData.targetList = list;
-                                }
+                        // Находим колонку под пальцем
+                        document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
+                        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if (el) {
+                            const list = el.closest('.card-list');
+                            if (list) {
+                                list.classList.add('drag-over');
+                                dragData.targetList = list;
                             }
                         }
                     }
                 }, { passive: false });
 
                 wrapper.addEventListener('touchend', function(e) {
+                    // Отменяем таймер долгого нажатия
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+
                     if (!dragData || card.column === 'archive') {
                         dragData = null;
+                        document.body.style.overflow = '';
                         return;
                     }
 
                     const touch = e.changedTouches[0];
 
-                    if (dragData.moved) {
-                        wrapper.classList.remove('dragging');
+                    // Удаляем оверлей
+                    const overlay = document.querySelector('.card-wrapper.drag-overlay');
+                    if (overlay) overlay.remove();
 
-                        const overlay = document.querySelector('.card-wrapper.drag-overlay');
-                        if (overlay) overlay.remove();
+                    wrapper.classList.remove('dragging');
+                    document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
+                    document.body.style.overflow = '';
 
-                        document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
-
+                    if (dragData.moved && dragData.targetList) {
                         const targetList = dragData.targetList;
+                        const newColumnId = targetList.dataset.columnId;
+                        const cards = getCards();
+                        const cardObj = cards.find(c => c.id === card.id);
 
-                        if (targetList) {
-                            const newColumnId = targetList.dataset.columnId;
-                            const cards = getCards();
-                            const cardObj = cards.find(c => c.id === card.id);
-
-                            if (cardObj && cardObj.column !== newColumnId) {
+                        if (cardObj) {
+                            if (cardObj.column !== newColumnId) {
                                 // Перемещение между колонками
                                 if (newColumnId === 'archive') {
                                     cardObj.column = 'archive';
@@ -1665,7 +1703,7 @@
                                     cardObj.column = newColumnId;
                                 }
 
-                                // Обновляем порядок карточек в целевой колонке
+                                // Обновляем порядок
                                 const cardIds = [];
                                 targetList.querySelectorAll('.card-wrapper').forEach(w => {
                                     const id = w.dataset.cardId;
@@ -1674,22 +1712,19 @@
                                     }
                                 });
 
-                                // Вставляем карточку на позицию, где она визуально находится
-                                const cardWrappers = targetList.querySelectorAll('.card-wrapper');
-                                let insertIndex = cardWrappers.length;
-                                for (let i = 0; i < cardWrappers.length; i++) {
-                                    if (cardWrappers[i].dataset.cardId === card.id) {
+                                // Вставляем на позицию
+                                const wrappers = targetList.querySelectorAll('.card-wrapper');
+                                let insertIndex = wrappers.length;
+                                for (let i = 0; i < wrappers.length; i++) {
+                                    if (wrappers[i].dataset.cardId === card.id) {
                                         insertIndex = i;
                                         break;
                                     }
                                 }
-
                                 cardIds.splice(insertIndex, 0, card.id);
 
-                                // Сортируем все карточки по новому порядку
                                 const cardMap = {};
                                 cards.forEach(c => cardMap[c.id] = c);
-
                                 const newCards = [];
                                 cardIds.forEach(id => {
                                     if (cardMap[id]) {
@@ -1697,30 +1732,23 @@
                                         delete cardMap[id];
                                     }
                                 });
-
-                                // Добавляем карточки, которые не попали в порядок (если есть)
                                 Object.values(cardMap).forEach(c => newCards.push(c));
 
-                                // Фильтруем карточки, чтобы оставить только те, что в этой колонке
                                 const filteredCards = newCards.filter(c => c.column === newColumnId);
                                 const otherCards = cards.filter(c => c.column !== newColumnId);
-
                                 setCards([...otherCards, ...filteredCards]);
                                 saveToStorageDebounced();
                                 render();
-                            } else if (cardObj && cardObj.column === newColumnId) {
-                                // Перемещение внутри одной колонки (смена порядка)
+                            } else {
+                                // Перемещение внутри одной колонки
                                 const cardIds = [];
                                 targetList.querySelectorAll('.card-wrapper').forEach(w => {
                                     const id = w.dataset.cardId;
-                                    if (id) {
-                                        cardIds.push(id);
-                                    }
+                                    if (id) cardIds.push(id);
                                 });
 
                                 const cardMap = {};
                                 cards.forEach(c => cardMap[c.id] = c);
-
                                 const newCards = [];
                                 cardIds.forEach(id => {
                                     if (cardMap[id]) {
@@ -1728,7 +1756,6 @@
                                         delete cardMap[id];
                                     }
                                 });
-
                                 Object.values(cardMap).forEach(c => newCards.push(c));
 
                                 setCards(newCards);
@@ -1739,6 +1766,24 @@
                     }
 
                     dragData = null;
+                    isLongPress = false;
+                }, { passive: true });
+
+                // Отмена при уходе пальца за пределы экрана
+                wrapper.addEventListener('touchcancel', function(e) {
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+                    if (dragData) {
+                        const overlay = document.querySelector('.card-wrapper.drag-overlay');
+                        if (overlay) overlay.remove();
+                        wrapper.classList.remove('dragging');
+                        document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
+                        document.body.style.overflow = '';
+                        dragData = null;
+                        isLongPress = false;
+                    }
                 }, { passive: true });
 
                 // ----- DESKTOP DRAG -----
@@ -1801,7 +1846,6 @@
                         if (!card) return;
 
                         if (card.column === newColumnId) {
-                            // Перемещение внутри одной колонки
                             const newOrder = [];
                             this.querySelectorAll('.card-wrapper').forEach(w => {
                                 const id = w.dataset.cardId;
