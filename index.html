@@ -95,9 +95,6 @@
             background: transparent;
         }
 
-        /* ================================================================
-           ШАПКА — ЗАКРЕПЛЕНА
-           ================================================================ */
         .header {
             display: flex;
             justify-content: space-between;
@@ -636,9 +633,6 @@
 
         .fab:active { transform: scale(0.88); }
 
-        /* ================================================================
-           МОДАЛКИ — ЦВЕТА МЕНЯЮТСЯ
-           ================================================================ */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -961,7 +955,6 @@
             }
         }
 
-        /* Drag ghost hide */
         .card-wrapper.dragging .card-inner {
             opacity: 0.3;
             transform: scale(0.95);
@@ -1498,7 +1491,7 @@
             }
 
             // ================================================================
-            // 11. КАРТОЧКА — ДОЛГОЕ НАЖАТИЕ ДЛЯ DRAG
+            // 11. КАРТОЧКА
             // ================================================================
             function createCardWrapper(card) {
                 const wrapper = document.createElement('div');
@@ -1729,7 +1722,6 @@
 
                         if (cardObj && newColumnId) {
                             if (cardObj.column !== newColumnId) {
-                                // Перемещение между колонками
                                 if (newColumnId === 'archive') {
                                     cardObj.column = 'archive';
                                     cardObj.archivedAt = Date.now();
@@ -1748,7 +1740,6 @@
                                 saveToStorageDebounced();
                                 render();
                             } else {
-                                // Перемещение внутри одной колонки — пересортировка
                                 const cardIds = [];
                                 targetList.querySelectorAll('.card-wrapper').forEach(w => {
                                     const id = w.dataset.cardId;
@@ -2117,7 +2108,6 @@
                 }
             });
 
-            // ----- Цвет фона -----
             const bgColors = {
                 blue: 'radial-gradient(ellipse at 50% 30%, #141b2d 0%, #0a0e1a 70%)',
                 dark: '#0a0a0a'
@@ -2233,7 +2223,7 @@
             }
 
             if (document.readyState === 'loading') {
-                document.addEventListener('document-loaded', init);
+                document.addEventListener('DOMContentLoaded', init);
             } else {
                 init();
             }
